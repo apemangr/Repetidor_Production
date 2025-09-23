@@ -1,0 +1,38 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${default}",
+                "C:\\Users\\guill\\OneDrive\\Desktop\\nRF5_SDK_17.1.0_ddde560\\**",
+                "${workspaceFolder}\\pca10040\\**",
+                "${workspaceFolder}\\pca10056\\**",
+                "${workspaceFolder}\\**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "NRF52832_XXAA",
+                "APP_TIMER_V2",
+                "APP_TIMER_V2_RTC1_ENABLED",
+                "NRFX_RTC2_ENABLED",
+                "RTC2_ENABLED",
+                "NRFX_RTC_ENABLED",
+                "HOLY_REPEATER",
+                "CONFIG_GPIO_AS_PINRESET",
+                "FLOAT_ABI_HARD",
+                "INITIALIZE_USER_SECTIONS",
+                "NO_VTOR_CONFIG",
+                "NRF_SD_BLE_API_VERSION=7",
+                "S132",
+                "SOFTDEVICE_PRESENT"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "windows-gcc-arm",
+            "compilerPath": "C:/msys64/mingw64/bin/arm-none-eabi-gcc.exe"
+        }
+    ],
+    "version": 4
+}
