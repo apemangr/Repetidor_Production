@@ -36,4 +36,8 @@ bool calendar_set_datetime(void);
 void restart_on_rtc(void);
 void restart_sleep_rtc(void);
 
+void restart_extended_on_rtc(void);
+void restart_extended_sleep_rtc(void);
+
+
 #endif // CALENDAR_H

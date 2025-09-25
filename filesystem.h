@@ -51,7 +51,9 @@ extern adc_values_t adc_values;
 typedef enum
 {
     TIEMPO_ENCENDIDO, // Tiempo de encendido
-    TIEMPO_SLEEP      // Tiempo de apagado
+    TIEMPO_SLEEP,      // Tiempo de apagado
+    TIEMPO_EXTENDED_SLEEP,
+    TIEMPO_EXTENDED_ENCENDIDO
 } valor_type_t;
 
 static uint8_t mac_address_from_flash[6] = {0};

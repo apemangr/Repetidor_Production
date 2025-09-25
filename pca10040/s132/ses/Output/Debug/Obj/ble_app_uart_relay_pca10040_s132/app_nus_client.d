@@ -1,6 +1,6 @@
 Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/app_nus_client.o: \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\app_nus_client.c \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\app_nus_client.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\app_nus_client.c \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\app_nus_client.h \
  C\:/Program\ Files/SEGGER/SEGGER\ Embedded\ Studio\ for\ ARM\ 5.42a/include/stdint.h \
  ../../../../../../components/softdevice/s132/headers/ble.h \
  ../../../../../../components/softdevice/s132/headers/nrf_svc.h \
@@ -73,9 +73,9 @@ Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/app_nus_client.o: \
  ../../../../../../components/softdevice/s132/headers/ble_types.h \
  ../../../../../../components/softdevice/s132/headers/ble_gap.h \
  ../../../../../../components/libraries/util/app_error.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\app_nus_server.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\filesystem.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\calendar.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\app_nus_server.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\filesystem.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\calendar.h \
  ../../../../../../components/libraries/fds/fds.h \
  ../../../../../../integration/nrfx/legacy/nrf_drv_clock.h \
  ../../../../../../modules/nrfx/drivers/include/nrfx_clock.h \
@@ -98,7 +98,7 @@ Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/app_nus_client.o: \
  ../../../../../../modules/nrfx/drivers/include/nrfx_power_clock.h \
  ../../../../../../modules/nrfx/drivers/include/nrfx_rtc.h \
  ../../../../../../modules/nrfx/hal/nrf_rtc.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\variables.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\variables.h \
  ../../../../../../components/libraries/delay/nrf_delay.h \
  ../../../../../../components/libraries/log/nrf_log.h \
  ../../../../../../components/libraries/strerror/nrf_strerror.h \

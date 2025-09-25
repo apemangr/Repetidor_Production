@@ -297,6 +297,12 @@ void app_nus_client_ble_evt_handler(ble_evt_t const *p_ble_evt)
             err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
             APP_ERROR_CHECK(err_code);
 
+            m_connected_this_cycle = true;
+            m_extended_mode_on     = false;
+
+            // Actualizar contador RTC inmediatamente a tiempos normales
+            restart_on_rtc();
+
             // start discovery of services. The NUS Client waits for a
             // discovery result
             err_code = ble_db_discovery_start(&m_db_disc,

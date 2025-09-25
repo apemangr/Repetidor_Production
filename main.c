@@ -97,11 +97,13 @@ ret_code_t fds_print_all_record_times(void)
 // #define RTC_SLEEP_TICKS (10 * 8)
 
 NRF_BLE_GATT_DEF(m_gatt); /**< GATT module instance. */
-nrfx_rtc_t           m_rtc            = NRFX_RTC_INSTANCE(2);
-bool                 m_device_active  = true;
-static uint16_t      m_conn_handle    = BLE_CONN_HANDLE_INVALID;
-static volatile bool m_rtc_on_flag    = false;
-static volatile bool m_rtc_sleep_flag = false;
+nrfx_rtc_t           m_rtc                  = NRFX_RTC_INSTANCE(2);
+bool                 m_device_active        = true;
+bool                 m_connected_this_cycle = false;
+bool                 m_extended_mode_on     = false;
+static uint16_t      m_conn_handle          = BLE_CONN_HANDLE_INVALID;
+static volatile bool m_rtc_on_flag          = false;
+static volatile bool m_rtc_sleep_flag       = false;
 static uint16_t      m_ble_nus_max_data_len =
     BLE_GATT_ATT_MTU_DEFAULT - OPCODE_LENGTH - HANDLE_LENGTH;
 //
@@ -202,13 +204,40 @@ void handle_rtc_events(void)
 
         if (m_device_active)
         {
-            NRF_LOG_RAW_INFO("\n\n\033[1;31m--------->\033[0m Transicion a \033[1;36mMODO SLEEP\033[0m");
             disconnect_all_devices();
             advertising_stop();
             scan_stop();
             app_uart_close();
-            m_device_active = false;
-            restart_sleep_rtc();
+            m_device_active        = false;
+
+            if (!m_connected_this_cycle)
+            {
+                NRF_LOG_RAW_INFO("\n\n\033[1;31m--------->\033[0m Transicion a \033[1;36mMODO SLEEP EXTENDIDO\033[0m");
+                uint32_t extended_on_ms = read_time_from_flash(
+                    TIEMPO_EXTENDED_ENCENDIDO, DEFAULT_DEVICE_EXTENDED_ON_TIME_MS);
+                uint32_t extended_sleep_ms = read_time_from_flash(
+                    TIEMPO_EXTENDED_SLEEP, DEFAULT_DEVICE_EXTENDED_SLEEP_TIME_MS);
+                NRF_LOG_RAW_INFO(
+                    "\n\t>> Modo extendido ACTIVADO (ON=%u ms, SLEEP=%u ms)",
+                    extended_on_ms, extended_sleep_ms);
+                m_extended_mode_on = true;
+                restart_extended_sleep_rtc();
+            }
+                else
+                {
+                    NRF_LOG_RAW_INFO("\n\n\033[1;31m--------->\033[0m Transicion a \033[1;36mMODO SLEEP\033[0m");
+                    uint32_t on_ms = read_time_from_flash(
+                        TIEMPO_ENCENDIDO, DEFAULT_DEVICE_ON_TIME_MS);
+                    uint32_t sleep_ms = read_time_from_flash(
+                        TIEMPO_SLEEP, DEFAULT_DEVICE_SLEEP_TIME_MS);
+                    NRF_LOG_RAW_INFO(
+                        "\n\t>> Modo normal (ON=%u ms, SLEEP=%u ms)",
+                        on_ms, sleep_ms);
+                    m_extended_mode_on = false;
+                    restart_sleep_rtc();
+                }
+
+            m_connected_this_cycle = false;
         }
     }
 
@@ -218,7 +247,14 @@ void handle_rtc_events(void)
 
         if (!m_device_active)
         {
-            NRF_LOG_RAW_INFO("\n\n\033[1;31m--------->\033[0m Transicion a \033[1;32mMODO ACTIVO\033[0m");
+            if (m_extended_mode_on)
+            {
+                NRF_LOG_RAW_INFO("\n\n\033[1;31m--------->\033[0m Transicion a \033[1;32mMODO ACTIVO EXTENDIDO\033[0m");
+            }
+            else
+            {
+                NRF_LOG_RAW_INFO("\n\n\033[1;31m--------->\033[0m Transicion a \033[1;32mMODO ACTIVO\033[0m");
+            }
 
             // TRATAR DE HACER LOS PROCESOS DE MEMORIA ANTES DE
             // INICIAR EL ADVERTISING Y EL SCANEO
@@ -241,8 +277,17 @@ void handle_rtc_events(void)
             scan_start();
             advertising_start();
             uart_init();
-            m_device_active = true;
-            restart_on_rtc();
+            m_device_active        = true;
+            m_connected_this_cycle = false;
+
+            if (m_extended_mode_on)
+            {
+                restart_extended_on_rtc();
+            }
+            else
+            {
+                restart_on_rtc();
+            }
         }
     }
 }
@@ -257,10 +302,20 @@ void rtc_init(void)
     while (!nrf_drv_clock_lfclk_is_running())
     {
     }
+                                uint32_t extended_on_ms = read_time_from_flash(
+                                    TIEMPO_EXTENDED_ENCENDIDO, DEFAULT_DEVICE_EXTENDED_ON_TIME_MS);
+                                NRF_LOG_RAW_INFO(
+                                    "\n\t>> Ciclo activo en modo extendido (ON=%u ms)",
+                                    extended_on_ms);
 
     // Configurar RTC con prescaler CORRECTO
     nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
     config.prescaler         = RTC_PRESCALER;
+                                uint32_t on_ms = read_time_from_flash(
+                                    TIEMPO_ENCENDIDO, DEFAULT_DEVICE_ON_TIME_MS);
+                                NRF_LOG_RAW_INFO(
+                                    "\n\t>> Ciclo activo en modo normal (ON=%u ms)",
+                                    on_ms);
     ret_code_t err_code      = nrfx_rtc_init(&m_rtc, &config, rtc_handler);
     APP_ERROR_CHECK(err_code);
 
@@ -675,7 +730,6 @@ int main(void)
 
     calendar_init();
 
-    NRF_LOG_FLUSH();
     calendar_set_datetime();
 
     NRF_LOG_RAW_INFO("\n\033[1;31m>\033[0m Buscando emisor...\n");

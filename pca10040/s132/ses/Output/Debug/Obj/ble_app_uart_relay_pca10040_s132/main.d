@@ -1,5 +1,5 @@
 Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/main.o: \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\main.c \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\main.c \
  C\:/Program\ Files/SEGGER/SEGGER\ Embedded\ Studio\ for\ ARM\ 5.42a/include/stdbool.h \
  C\:/Program\ Files/SEGGER/SEGGER\ Embedded\ Studio\ for\ ARM\ 5.42a/include/stdint.h \
  C\:/Program\ Files/SEGGER/SEGGER\ Embedded\ Studio\ for\ ARM\ 5.42a/include/stdio.h \
@@ -21,7 +21,7 @@ Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/main.o: \
  ../../../../../../components/softdevice/s132/headers/nrf_error.h \
  ../../../../../../components/libraries/util/nordic_common.h \
  ../../../../../../components/libraries/util/app_error_weak.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\app_nus_client.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\app_nus_client.h \
  ../../../../../../components/softdevice/s132/headers/ble.h \
  ../../../../../../components/softdevice/s132/headers/nrf_svc.h \
  ../../../../../../components/softdevice/s132/headers/nrf_error.h \
@@ -73,9 +73,9 @@ Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/main.o: \
  ../../../../../../components/ble/common/ble_srv_common.h \
  ../../../../../../components/softdevice/s132/headers/ble_types.h \
  ../../../../../../components/softdevice/s132/headers/ble_gap.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\app_nus_server.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\filesystem.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\calendar.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\app_nus_server.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\filesystem.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\calendar.h \
  ../../../../../../components/libraries/fds/fds.h \
  ../../../../../../integration/nrfx/legacy/nrf_drv_clock.h \
  ../../../../../../modules/nrfx/drivers/include/nrfx_clock.h \
@@ -98,7 +98,7 @@ Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/main.o: \
  ../../../../../../modules/nrfx/drivers/include/nrfx_power_clock.h \
  ../../../../../../modules/nrfx/drivers/include/nrfx_rtc.h \
  ../../../../../../modules/nrfx/hal/nrf_rtc.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\variables.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\variables.h \
  ../../../../../../components/libraries/delay/nrf_delay.h \
  ../../../../../../components/libraries/log/nrf_log.h \
  ../../../../../../components/libraries/strerror/nrf_strerror.h \
@@ -121,7 +121,7 @@ Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/main.o: \
  ../../../../../../modules/nrfx/hal/nrf_gpio.h \
  ../../../../../../components/boards/HOLY_REPEATER.h \
  ../../../../../../components/libraries/button/app_button.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\prueba_potencia\leds.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\leds.h \
  ../../../../../../components/ble/nrf_ble_gatt/nrf_ble_gatt.h \
  ../../../../../../integration/nrfx/legacy/nrf_drv_rtc.h \
  ../../../../../../components/libraries/log/nrf_log_default_backends.h \

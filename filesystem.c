@@ -330,11 +330,33 @@ uint32_t read_time_from_flash(valor_type_t valor_type, uint32_t default_valor)
     fds_find_token_t   ftok      = {0}; // Importante inicializar a cero
     uint32_t           resultado = default_valor;
     uint32_t          *data;
-    uint16_t           record_key;
     ret_code_t         err_code;
-    // Determinar el Record Key según el tipo de valor
-    record_key = (valor_type == TIEMPO_ENCENDIDO) ? TIME_ON_RECORD_KEY
-                                                  : TIME_SLEEP_RECORD_KEY;
+    const char        *label;
+    uint16_t           record_key;
+
+    switch (valor_type)
+    {
+    case TIEMPO_ENCENDIDO:
+        record_key = TIME_ON_RECORD_KEY;
+        label      = "encendido";
+        break;
+    case TIEMPO_SLEEP:
+        record_key = TIME_SLEEP_RECORD_KEY;
+        label      = "sleep";
+        break;
+    case TIEMPO_EXTENDED_SLEEP:
+        record_key = TIME_EXTENDED_SLEEP_RECORD_KEY;
+        label      = "sleep extendido";
+        break;
+    case TIEMPO_EXTENDED_ENCENDIDO:
+        record_key = TIME_EXTENDED_ON_RECORD_KEY;
+        label      = "encendido extendido";
+        break;
+    default:
+        record_key = TIME_ON_RECORD_KEY;
+        label      = "desconocido";
+        break;
+    }
 
     // Busca el registro en la memoria flash
     err_code = fds_record_find(TIME_FILE_ID, record_key, &record_desc, &ftok);
@@ -352,8 +374,7 @@ uint32_t read_time_from_flash(valor_type_t valor_type, uint32_t default_valor)
                 data      = (uint32_t *)flash_record.p_data;
                 resultado = *data;
                 NRF_LOG_RAW_INFO("\n\t>> Tiempo de %s cargado: %u ms",
-                                 (valor_type == TIEMPO_ENCENDIDO) ? "encendido"
-                                                                  : "sleep",
+                                 label,
                                  resultado);
             }
             else
@@ -450,9 +471,33 @@ datetime_t read_date_from_flash(void)
 
 void write_time_to_flash(valor_type_t valor_type, uint32_t valor)
 {
-    uint16_t          record_key = (valor_type == TIEMPO_ENCENDIDO)
-                                       ? TIME_ON_RECORD_KEY
-                                       : TIME_SLEEP_RECORD_KEY;
+    uint16_t          record_key;
+    const char       *label;
+
+    switch (valor_type)
+    {
+    case TIEMPO_ENCENDIDO:
+        record_key = TIME_ON_RECORD_KEY;
+        label      = "encendido";
+        break;
+    case TIEMPO_SLEEP:
+        record_key = TIME_SLEEP_RECORD_KEY;
+        label      = "sleep";
+        break;
+    case TIEMPO_EXTENDED_SLEEP:
+        record_key = TIME_EXTENDED_SLEEP_RECORD_KEY;
+        label      = "sleep extendido";
+        break;
+    case TIEMPO_EXTENDED_ENCENDIDO:
+        record_key = TIME_EXTENDED_ON_RECORD_KEY;
+        label      = "encendido extendido";
+        break;
+    default:
+        record_key = TIME_ON_RECORD_KEY;
+        label      = "desconocido";
+        break;
+    }
+
     fds_record_t      record     = {.file_id           = TIME_FILE_ID,
                                     .key               = record_key,
                                     .data.p_data       = &valor,
@@ -466,7 +511,7 @@ void write_time_to_flash(valor_type_t valor_type, uint32_t valor)
     {
         err_code = fds_record_update(&record_desc, &record);
         NRF_LOG_RAW_INFO("\n> Tiempo de %s %s: %d segundos.",
-                         (valor_type == TIEMPO_ENCENDIDO) ? "encendido" : "sleep",
+                         label,
                          (err_code == NRF_SUCCESS) ? "actualizado"
                                                    : "falló al actualizar",
                          valor / 1000);
@@ -475,7 +520,7 @@ void write_time_to_flash(valor_type_t valor_type, uint32_t valor)
     {
         err_code = fds_record_write(&record_desc, &record);
         NRF_LOG_RAW_INFO("\nTiempo de %s %s: %d segundos.\n",
-                         (valor_type == TIEMPO_ENCENDIDO) ? "encendido" : "sleep",
+                         label,
                          (err_code == NRF_SUCCESS) ? "guardado"
                                                    : "falló al guardar",
                          valor / 1000);

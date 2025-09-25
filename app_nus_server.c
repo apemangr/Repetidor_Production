@@ -588,6 +588,11 @@ void app_nus_server_ble_evt_handler(ble_evt_t const *p_ble_evt)
         {
             NRF_LOG_RAW_INFO("\nEmisor conectado");
             m_emisor_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+            m_connected_this_cycle = true;
+            m_extended_mode_on     = false;
+            
+            // Actualizar contador RTC inmediatamente a tiempos normales
+            restart_on_rtc();
         }
         break;
 
