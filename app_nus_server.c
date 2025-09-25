@@ -223,7 +223,7 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
 
                         // Guarda la MAC en la memoria flash y reinicia el
                         // dispositivo
-                        save_mac_to_flash(custom_mac_addr_);
+                        save_mac_to_flash(MAC_EMISOR, custom_mac_addr_);
                     }
                     else
                     {
@@ -239,7 +239,7 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                         NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 02 recibido: Mostrando "
                                          "MAC "
                                          "guardada \x1b[0m");
-                        load_mac_from_flash(mac_print);
+                        load_mac_from_flash(mac_print, MAC_EMISOR);
                         // muestra la MAC
                     }
 
@@ -684,7 +684,7 @@ void advertising_init(void)
     m_beacon_info[6] = LSB_16(adc_values.V2);
 
     // Indentificador
-    manuf_specific_data.company_identifier = 0x1133;
+    manuf_specific_data.company_identifier = 0x2233;
     manuf_specific_data.data.p_data        = (uint8_t *)m_beacon_info;
     manuf_specific_data.data.size          = sizeof(m_beacon_info);
 

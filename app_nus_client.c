@@ -38,7 +38,7 @@ static void target_periph_addr_init(void)
     // 80 --
     NRF_LOG_RAW_INFO("\n\n\033[1;31m>\033[0m Configurando filtrado...");
     nrf_delay_ms(20);
-    load_mac_from_flash(m_target_periph_addr.addr);
+    load_mac_from_flash(m_target_periph_addr.addr, MAC_EMISOR);
 
     // Verifica si la MAC se ha cargado correctamente
     if (m_target_periph_addr.addr[0] == 0 && m_target_periph_addr.addr[1] == 0 &&

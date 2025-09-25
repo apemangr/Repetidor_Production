@@ -46,7 +46,18 @@ typedef struct
     uint32_t contador; // Contador de advertisings
 } adc_values_t;
 
+typedef struct
+{
+    uint8_t mac_emisor[6];
+    uint8_t mac_repetidor[6];
+    uint32_t tiempo_encendido;
+    uint32_t tiempo_dormido;
+    uint32_t tiempo_extendido;
+    uint8_t version[3];
+} config_repeater_t;
+
 extern adc_values_t adc_values;
+extern config_repeater_t config_repeater;
 
 typedef enum
 {
@@ -55,6 +66,12 @@ typedef enum
     TIEMPO_EXTENDED_SLEEP,
     TIEMPO_EXTENDED_ENCENDIDO
 } valor_type_t;
+
+typedef enum
+{
+    MAC_EMISOR,     // MAC del dispositivo emisor a buscar
+    MAC_REPETIDOR   // MAC del propio repetidor
+} mac_type_t;
 
 static uint8_t mac_address_from_flash[6] = {0};
 
@@ -75,8 +92,8 @@ ret_code_t write_date_to_flash(const datetime_t *p_date);
 datetime_t read_date_from_flash(void);
 void       write_time_to_flash(valor_type_t valor_type, uint32_t valor);
 uint32_t   read_time_from_flash(valor_type_t valor_type, uint32_t default_valor);
-void       load_mac_from_flash(uint8_t *mac_out);
-void       save_mac_to_flash(uint8_t *mac_addr);
+void       load_mac_from_flash(mac_type_t mac_type, uint8_t *mac_out);
+void       save_mac_to_flash(mac_type_t mac_type, uint8_t *mac_addr);
 
 // typedef struct
 // {

@@ -15,7 +15,9 @@
 #define DEFAULT_DEVICE_EXTENDED_SLEEP_TIME_MS 10000
 
 #define MAC_FILE_ID                           0x0001 /** STORAGE	 */
-#define MAC_RECORD_KEY                        0x0002
+#define MAC_EMISOR_RECORD_KEY                 0x0002
+#define MAC_REPETIDOR_RECORD_KEY              0x000C
+#define MAC_RECORD_KEY                        MAC_EMISOR_RECORD_KEY  // Mantener compatibilidad
 #define TIME_FILE_ID                          0x0003
 #define TIME_ON_RECORD_KEY                    0x0004
 #define TIME_SLEEP_RECORD_KEY                 0x0005
