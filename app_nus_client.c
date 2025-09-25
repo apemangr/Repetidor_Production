@@ -36,17 +36,17 @@ static void target_periph_addr_init(void)
 {
     // Carga la MAC desde la memoria flash
     // 80 --
-    NRF_LOG_RAW_INFO("\n\n\033[1;31m>\033[0m Configurando filtrado...");
+    NRF_LOG_RAW_INFO("\n" LOG_EXEC " Configurando filtrado...");
     nrf_delay_ms(20);
-    load_mac_from_flash(m_target_periph_addr.addr, MAC_EMISOR);
+    load_mac_from_flash(MAC_EMISOR, m_target_periph_addr.addr);
 
     // Verifica si la MAC se ha cargado correctamente
     if (m_target_periph_addr.addr[0] == 0 && m_target_periph_addr.addr[1] == 0 &&
         m_target_periph_addr.addr[2] == 0 && m_target_periph_addr.addr[3] == 0 &&
         m_target_periph_addr.addr[4] == 0 && m_target_periph_addr.addr[5] == 0)
     {
-        NRF_LOG_RAW_INFO("\n\t>> \033[0;31mError: No se pudo cargar la direccion "
-                         "MAC desde la memoria flash.\033[0m\n");
+        NRF_LOG_RAW_INFO(LOG_FAIL " No se pudo cargar la direccion "
+                                  "MAC desde la memoria flash.\033[0m\n");
         return;
     }
     // Configura la dirección del dispositivo objetivo
@@ -55,7 +55,7 @@ static void target_periph_addr_init(void)
     // sizeof(m_target_periph_addr.addr));
 
     NRF_LOG_RAW_INFO(
-        "\n\t>> \033[0;32mFiltrado configurado correctamente.\033[0m\n");
+        LOG_OK " Filtrado configurado correctamente.\033[0m\n");
 }
 
 static void nus_error_handler(uint32_t nrf_error)
@@ -112,12 +112,11 @@ static void scan_evt_handler(scan_evt_t const *p_scan_evt)
         ble_gap_evt_connected_t const *p_connected =
             p_scan_evt->params.connected.p_connected;
 
-        NRF_LOG_RAW_INFO(
-            "\n\nConectado a dispositivo autorizado: "
-            "%02x:%02x:%02x:%02x:%02x:%02x",
-            p_connected->peer_addr.addr[0], p_connected->peer_addr.addr[1],
-            p_connected->peer_addr.addr[2], p_connected->peer_addr.addr[3],
-            p_connected->peer_addr.addr[4], p_connected->peer_addr.addr[5]);
+        NRF_LOG_RAW_INFO(LOG_OK " Conectado a dispositivo autorizado: "
+                                "%02x:%02x:%02x:%02x:%02x:%02x",
+                         p_connected->peer_addr.addr[5], p_connected->peer_addr.addr[4],
+                         p_connected->peer_addr.addr[3], p_connected->peer_addr.addr[2],
+                         p_connected->peer_addr.addr[1], p_connected->peer_addr.addr[0]);
     }
     break;
 
@@ -219,17 +218,17 @@ static void ble_nus_c_evt_handler(ble_nus_c_t           *p_ble_nus_c,
         cmd_id[0] = '9';
         cmd_id[1] = '6';
 
-        err_code      = app_nus_client_send_data(cmd_id, 2);
+        err_code  = app_nus_client_send_data(cmd_id, 2);
         if (err_code != NRF_SUCCESS)
         {
             NRF_LOG_RAW_INFO("\nFallo al solicitar datos de ADC y contador: %d", err_code);
         }
-    
+
         // Solicitar el ultimo historial del emisor
         cmd_id[0] = '0';
         cmd_id[1] = '8';
 
-        err_code      = app_nus_client_send_data(cmd_id, 2);
+        err_code  = app_nus_client_send_data(cmd_id, 2);
         if (err_code != NRF_SUCCESS)
         {
             NRF_LOG_RAW_INFO("\nFallo al solicitar el ultimo historial: %d", err_code);

@@ -29,69 +29,64 @@
 #include "variables.h"
 
 // store_flash Flash_array = {0};
-adc_values_t adc_values = {0};
+adc_values_t      adc_values      = {0};
+config_repeater_t config_repeater = {0};
 
-/**
- * @brief Lee todos los registros de historial e imprime la hora de cada uno
- *
- * @param file_id       ID del archivo a leer
- * @return ret_code_t   Código de retorno
- */
-ret_code_t fds_print_all_record_times(void)
-{
-    ret_code_t         err_code;
-    fds_find_token_t   token          = {0};
-    fds_record_desc_t  record_desc    = {0};
-    fds_flash_record_t flash_record   = {0};
-    uint32_t           record_count   = 0;
-    uint16_t           expected_words = BYTES_TO_WORDS(sizeof(store_history));
+// ret_code_t fds_print_all_record_times(void)
+// {
+//     ret_code_t         err_code;
+//     fds_find_token_t   token          = {0};
+//     fds_record_desc_t  record_desc    = {0};
+//     fds_flash_record_t flash_record   = {0};
+//     uint32_t           record_count   = 0;
+//     uint16_t           expected_words = BYTES_TO_WORDS(sizeof(store_history));
 
-    // Iterar a través de todos los registros del file_id
-    while (fds_record_iterate(&record_desc, &token) == NRF_SUCCESS)
-    {
-        // Abrir el registro para lectura
-        err_code = fds_record_open(&record_desc, &flash_record);
-        if (err_code != NRF_SUCCESS)
-        {
-            NRF_LOG_ERROR("Error abriendo registro ID %d", record_desc.record_id);
-            continue;
-        }
+//     // Iterar a través de todos los registros del file_id
+//     while (fds_record_iterate(&record_desc, &token) == NRF_SUCCESS)
+//     {
+//         // Abrir el registro para lectura
+//         err_code = fds_record_open(&record_desc, &flash_record);
+//         if (err_code != NRF_SUCCESS)
+//         {
+//             NRF_LOG_ERROR("Error abriendo registro ID %d", record_desc.record_id);
+//             continue;
+//         }
 
-        // Verificar que el tamaño sea correcto
-        if (flash_record.p_header->length_words != expected_words)
-        {
-            NRF_LOG_WARNING("Registro ID %d: tamaño incorrecto (%d words)",
-                            record_desc.record_id, flash_record.p_header->length_words);
-            fds_record_close(&record_desc);
-            continue;
-        }
+//         // Verificar que el tamaño sea correcto
+//         if (flash_record.p_header->length_words != expected_words)
+//         {
+//             NRF_LOG_WARNING("Registro ID %d: tamaño incorrecto (%d words)",
+//                             record_desc.record_id, flash_record.p_header->length_words);
+//             fds_record_close(&record_desc);
+//             continue;
+//         }
 
-        // Obtener puntero a los datos del historial
-        const store_history *p_history = (const store_history *)flash_record.p_data;
+//         // Obtener puntero a los datos del historial
+//         const store_history *p_history = (const store_history *)flash_record.p_data;
 
-        // Imprimir la hora del registro
-        // NRF_LOG_INFO("Registro %d: %04d-%02d-%02d",
-        //              record_desc.record_id,
-        //              p_history->year,
-        //              p_history->month,
-        //              p_history->day);
-        // NRF_LOG_INFO("Hora: %02d:%02d:%02d, Contador: %d",
-        //              p_history->hour,
-        //              p_history->minute,
-        //              p_history->second,
-        //              p_history->contador);
+//         // Imprimir la hora del registro
+//         // NRF_LOG_INFO("Registro %d: %04d-%02d-%02d",
+//         //              record_desc.record_id,
+//         //              p_history->year,
+//         //              p_history->month,
+//         //              p_history->day);
+//         // NRF_LOG_INFO("Hora: %02d:%02d:%02d, Contador: %d",
+//         //              p_history->hour,
+//         //              p_history->minute,
+//         //              p_history->second,
+//         //              p_history->contador);
 
-        record_count++;
+//         record_count++;
 
-        // Cerrar el registro
-        fds_record_close(&record_desc);
-    }
+//         // Cerrar el registro
+//         fds_record_close(&record_desc);
+//     }
 
-    NRF_LOG_INFO("=== Total de registros procesados: %d ===", record_count);
-    NRF_LOG_FLUSH();
-    nrf_delay_ms(1000);
-    return NRF_SUCCESS;
-}
+//     NRF_LOG_INFO("=== Total de registros procesados: %d ===", record_count);
+//     NRF_LOG_FLUSH();
+//     nrf_delay_ms(1000);
+//     return NRF_SUCCESS;
+// }
 
 // #define RTC_ON_TICKS    (100 * 8)
 // #define RTC_SLEEP_TICKS (10 * 8)
@@ -208,34 +203,34 @@ void handle_rtc_events(void)
             advertising_stop();
             scan_stop();
             app_uart_close();
-            m_device_active        = false;
+            m_device_active = false;
 
             if (!m_connected_this_cycle)
             {
-                NRF_LOG_RAW_INFO("\n\n\033[1;31m--------->\033[0m Transicion a \033[1;36mMODO SLEEP EXTENDIDO\033[0m");
+                NRF_LOG_RAW_INFO("\n" LOG_INFO " Transicion a \033[1;36mMODO SLEEP EXTENDIDO\033[0m");
                 uint32_t extended_on_ms = read_time_from_flash(
                     TIEMPO_EXTENDED_ENCENDIDO, DEFAULT_DEVICE_EXTENDED_ON_TIME_MS);
                 uint32_t extended_sleep_ms = read_time_from_flash(
                     TIEMPO_EXTENDED_SLEEP, DEFAULT_DEVICE_EXTENDED_SLEEP_TIME_MS);
                 NRF_LOG_RAW_INFO(
-                    "\n\t>> Modo extendido ACTIVADO (ON=%u ms, SLEEP=%u ms)",
+                    LOG_INFO " Modo extendido ACTIVADO (ON=%u ms, SLEEP=%u ms)",
                     extended_on_ms, extended_sleep_ms);
                 m_extended_mode_on = true;
                 restart_extended_sleep_rtc();
             }
-                else
-                {
-                    NRF_LOG_RAW_INFO("\n\n\033[1;31m--------->\033[0m Transicion a \033[1;36mMODO SLEEP\033[0m");
-                    uint32_t on_ms = read_time_from_flash(
-                        TIEMPO_ENCENDIDO, DEFAULT_DEVICE_ON_TIME_MS);
-                    uint32_t sleep_ms = read_time_from_flash(
-                        TIEMPO_SLEEP, DEFAULT_DEVICE_SLEEP_TIME_MS);
-                    NRF_LOG_RAW_INFO(
-                        "\n\t>> Modo normal (ON=%u ms, SLEEP=%u ms)",
-                        on_ms, sleep_ms);
-                    m_extended_mode_on = false;
-                    restart_sleep_rtc();
-                }
+            else
+            {
+                NRF_LOG_RAW_INFO("\n" LOG_INFO " Transicion a \033[1;36mMODO SLEEP\033[0m");
+                uint32_t on_ms = read_time_from_flash(
+                    TIEMPO_ENCENDIDO, DEFAULT_DEVICE_ON_TIME_MS);
+                uint32_t sleep_ms = read_time_from_flash(
+                    TIEMPO_SLEEP, DEFAULT_DEVICE_SLEEP_TIME_MS);
+                NRF_LOG_RAW_INFO(
+                    LOG_INFO " Modo normal (ON=%u ms, SLEEP=%u ms)",
+                    on_ms, sleep_ms);
+                m_extended_mode_on = false;
+                restart_sleep_rtc();
+            }
 
             m_connected_this_cycle = false;
         }
@@ -249,11 +244,11 @@ void handle_rtc_events(void)
         {
             if (m_extended_mode_on)
             {
-                NRF_LOG_RAW_INFO("\n\n\033[1;31m--------->\033[0m Transicion a \033[1;32mMODO ACTIVO EXTENDIDO\033[0m");
+                NRF_LOG_RAW_INFO("\n" LOG_INFO " Transicion a \033[1;32mMODO ACTIVO EXTENDIDO\033[0m");
             }
             else
             {
-                NRF_LOG_RAW_INFO("\n\n\033[1;31m--------->\033[0m Transicion a \033[1;32mMODO ACTIVO\033[0m");
+                NRF_LOG_RAW_INFO("\n" LOG_INFO " Transicion a \033[1;32mMODO ACTIVO\033[0m");
             }
 
             // TRATAR DE HACER LOS PROCESOS DE MEMORIA ANTES DE
@@ -261,17 +256,15 @@ void handle_rtc_events(void)
 
             // Modificar el advertising payload para mostrar
             // los valores de los ADC
-            advertising_init();
 
-            // write_date_to_flash(&m_time);
-
-            // fds_print_all_record_times(HISTORY_FILE_ID);
-
-            // Mostrar fecha y hora
-            NRF_LOG_RAW_INFO("\n[GUARDADO] Fecha y hora actual: %04u-%02u-%02u, "
-                             "%02u:%02u:%02u",
+            // Guardar y mostrar fecha y hora
+            save_config_to_flash(&config_repeater);
+            NRF_LOG_RAW_INFO(LOG_OK " Guardado de fecha y hora actual: %04u-%02u-%02u, "
+                                    "%02u:%02u:%02u",
                              m_time.year, m_time.month, m_time.day,
                              m_time.hour, m_time.minute, m_time.second);
+
+            advertising_init();
 
             // Actualizar el payload para mostrar los adc_values
             scan_start();
@@ -302,21 +295,15 @@ void rtc_init(void)
     while (!nrf_drv_clock_lfclk_is_running())
     {
     }
-                                uint32_t extended_on_ms = read_time_from_flash(
-                                    TIEMPO_EXTENDED_ENCENDIDO, DEFAULT_DEVICE_EXTENDED_ON_TIME_MS);
-                                NRF_LOG_RAW_INFO(
-                                    "\n\t>> Ciclo activo en modo extendido (ON=%u ms)",
-                                    extended_on_ms);
+    uint32_t extended_on_ms = read_time_from_flash(
+        TIEMPO_EXTENDED_ENCENDIDO, DEFAULT_DEVICE_EXTENDED_ON_TIME_MS);
 
     // Configurar RTC con prescaler CORRECTO
     nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
     config.prescaler         = RTC_PRESCALER;
-                                uint32_t on_ms = read_time_from_flash(
-                                    TIEMPO_ENCENDIDO, DEFAULT_DEVICE_ON_TIME_MS);
-                                NRF_LOG_RAW_INFO(
-                                    "\n\t>> Ciclo activo en modo normal (ON=%u ms)",
-                                    on_ms);
-    ret_code_t err_code      = nrfx_rtc_init(&m_rtc, &config, rtc_handler);
+    uint32_t on_ms           = read_time_from_flash(
+        TIEMPO_ENCENDIDO, DEFAULT_DEVICE_ON_TIME_MS);
+    ret_code_t err_code = nrfx_rtc_init(&m_rtc, &config, rtc_handler);
     APP_ERROR_CHECK(err_code);
 
     // Limpiar contador y comenzar desde cero
@@ -713,7 +700,7 @@ int main(void)
                      "\033[1;33mINICIO DEL SISTEMA\033[0m"
                      " \033[1;36m====================\033[0m\n");
     NRF_LOG_RAW_INFO("\t\t Firmware 0.0.1 por\033[0m "
-                     "\033[1;90mCrea\033[1;31mLab\033[0m\n\n");
+                     "\033[1;90mCrea\033[1;31mLab\033[0m\n");
 
     base_timer_init();
     rtc_init();
@@ -724,6 +711,11 @@ int main(void)
     ble_stack_init();
     gatt_init();
 
+    // Inicializar sistema de almacenamiento FDS
+    fds_initialize();
+
+    init_sistema_configuracion(&config_repeater);
+
     // Inicializa los servicios de servidor y cliente NUS
     app_nus_server_init(app_nus_server_on_data_received);
     app_nus_client_init(app_nus_client_on_data_received);
@@ -732,7 +724,9 @@ int main(void)
 
     calendar_set_datetime();
 
-    NRF_LOG_RAW_INFO("\n\033[1;31m>\033[0m Buscando emisor...\n");
+    // Cargar y mostrar configuración del sistema
+
+    NRF_LOG_RAW_INFO(LOG_INFO " Buscando emisor...\n");
     NRF_LOG_FLUSH();
 
     // Enter main loop.

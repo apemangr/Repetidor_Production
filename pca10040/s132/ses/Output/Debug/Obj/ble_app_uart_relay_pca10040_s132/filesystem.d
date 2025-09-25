@@ -6,7 +6,6 @@ Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/filesystem.o: \
  C\:/Program\ Files/SEGGER/SEGGER\ Embedded\ Studio\ for\ ARM\ 5.42a/include/stdlib.h \
  C\:/Program\ Files/SEGGER/SEGGER\ Embedded\ Studio\ for\ ARM\ 5.42a/include/__crossworks.h \
  C\:/Program\ Files/SEGGER/SEGGER\ Embedded\ Studio\ for\ ARM\ 5.42a/include/string.h \
- C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\calendar.h \
  ../../../../../../components/libraries/util/app_error.h \
  C\:/Program\ Files/SEGGER/SEGGER\ Embedded\ Studio\ for\ ARM\ 5.42a/include/stdio.h \
  ../../../../../../modules/nrfx/mdk/nrf.h \
@@ -25,6 +24,7 @@ Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/filesystem.o: \
  ../../../../../../components/softdevice/s132/headers/nrf_error.h \
  ../../../../../../components/libraries/util/nordic_common.h \
  ../../../../../../components/libraries/util/app_error_weak.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\calendar.h \
  ../../../../../../components/libraries/fds/fds.h \
  ../../../../../../components/libraries/util/sdk_errors.h \
  ../../../../../../components/libraries/util/app_util_platform.h \
@@ -80,4 +80,15 @@ Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/filesystem.o: \
  ../../../../../../components/libraries/log/src/nrf_log_ctrl_internal.h \
  ../../../../../../components/libraries/log/nrf_log_backend_interface.h \
  ../../../../../../components/libraries/memobj/nrf_memobj.h \
- ../../../../../../components/libraries/balloc/nrf_balloc.h
+ ../../../../../../components/libraries/balloc/nrf_balloc.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\app_nus_server.h \
+ ../../../../../../components/softdevice/s132/headers/ble.h \
+ ../../../../../../components/softdevice/s132/headers/ble_err.h \
+ ../../../../../../components/softdevice/s132/headers/ble_gap.h \
+ ../../../../../../components/softdevice/s132/headers/ble_hci.h \
+ ../../../../../../components/softdevice/s132/headers/ble_ranges.h \
+ ../../../../../../components/softdevice/s132/headers/ble_types.h \
+ ../../../../../../components/softdevice/s132/headers/ble_l2cap.h \
+ ../../../../../../components/softdevice/s132/headers/ble_gatt.h \
+ ../../../../../../components/softdevice/s132/headers/ble_gattc.h \
+ ../../../../../../components/softdevice/s132/headers/ble_gatts.h

@@ -57,97 +57,6 @@ static ble_gap_addr_t                    m_target_periph_addr;
 static ble_uuid_t                        m_adv_uuids[] = {
     {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};
 
-// Función para realizar la recolección de basura
-static void perform_garbage_collection(void)
-{
-    ret_code_t err_code = fds_gc();
-    if (err_code == NRF_SUCCESS)
-    {
-        NRF_LOG_RAW_INFO("\n\t>> Recoleccion de basura completada.");
-    }
-    else
-    {
-        NRF_LOG_RAW_INFO("\n\t>> Error en la recoleccion de basura: %d", err_code);
-    }
-}
-
-static void fds_evt_handler(fds_evt_t const *p_evt)
-{
-    if (p_evt->id == FDS_EVT_INIT)
-    {
-        if (p_evt->result == NRF_SUCCESS)
-        {
-            NRF_LOG_RAW_INFO("\n\033[1;31m>\033[0m Iniciando el modulo de almacenamiento...\n");
-
-            fds_stat_t stat = {0};
-            fds_stat(&stat);
-            NRF_LOG_RAW_INFO("\t>> Se encontraron %d registros validos.\n",
-                             stat.valid_records);
-            NRF_LOG_RAW_INFO("\t>> Se encontraron %d registros no validos.",
-                             stat.dirty_records);
-
-            if (stat.dirty_records > 0)
-            {
-                // Realiza la recolección de basura
-                NRF_LOG_RAW_INFO("\n\t>> Limpiando registros no validos...");
-                perform_garbage_collection();
-            }
-            NRF_LOG_RAW_INFO(
-                "\n\t>> \033[0;32mModulo inicializado correctamente.\033[0m");
-        }
-        else
-        {
-            NRF_LOG_RAW_INFO("\nError al inicializar FDS: %d", p_evt->result);
-        }
-    }
-    else if (p_evt->id == FDS_EVT_WRITE)
-    {
-        if (p_evt->result == NRF_SUCCESS)
-        {
-            NRF_LOG_RAW_INFO("\n\x1b[1;32m>> Registro escrito correctamente!\x1b[0m");
-        }
-        else
-        {
-            NRF_LOG_ERROR("Error al escribir el registro: %d", p_evt->result);
-        }
-    }
-    else if (p_evt->id == FDS_EVT_UPDATE)
-    {
-        if (p_evt->result == NRF_SUCCESS)
-        {
-            // NRF_LOG_RAW_INFO(
-            //     "\n\n\x1b[1;32m>>\x1b[0m Registro actualizado correctamente!");
-        }
-        else
-        {
-            NRF_LOG_ERROR("Error al actualizar el registro: %d", p_evt->result);
-        }
-    }
-    else if (p_evt->id == FDS_EVT_DEL_RECORD)
-    {
-        if (p_evt->result == NRF_SUCCESS)
-        {
-            NRF_LOG_RAW_INFO("\nRegistro eliminado correctamente.");
-        }
-        else
-        {
-            NRF_LOG_ERROR("Error al eliminar el registro: %d", p_evt->result);
-        }
-    }
-}
-
-static void fds_initialize(void)
-{
-    ret_code_t err_code;
-
-    // Registra el manejador de eventos
-    err_code = fds_register(fds_evt_handler);
-    APP_ERROR_CHECK(err_code);
-
-    // Inicializa el módulo FDS
-    err_code = fds_init();
-    APP_ERROR_CHECK(err_code);
-}
 /**@brief Function for handling Queued Write Module errors.
  *
  * @details A pointer to this function will be passed to each service which may
@@ -239,7 +148,7 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                         NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 02 recibido: Mostrando "
                                          "MAC "
                                          "guardada \x1b[0m");
-                        load_mac_from_flash(mac_print, MAC_EMISOR);
+                        load_mac_from_flash(MAC_EMISOR, mac_print);
                         // muestra la MAC
                     }
 
@@ -441,6 +350,12 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
 
                     break;
                 }
+                case 14: // Comando 14: Enviar configuracion actual
+                {
+                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 14 recibido: Enviar configuracion actual\x1b[0m");
+                    send_config_via_ble();
+                    break;
+                }
                 default: // Comando desconocido
                     NRF_LOG_WARNING("Comando desconocido: %s", command);
                     break;
@@ -580,13 +495,13 @@ void app_nus_server_ble_evt_handler(ble_evt_t const *p_ble_evt)
     case BLE_GAP_EVT_CONNECTED:
         if (p_gap_evt->params.connected.role == BLE_GAP_ROLE_PERIPH)
         {
-            NRF_LOG_RAW_INFO("\nCelular conectado");
+            NRF_LOG_RAW_INFO(LOG_OK " Celular conectado");
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             restart_on_rtc();
         }
         else if (p_gap_evt->params.connected.role == BLE_GAP_ROLE_CENTRAL)
         {
-            NRF_LOG_RAW_INFO("\nEmisor conectado");
+            NRF_LOG_RAW_INFO(LOG_OK " Emisor conectado");
             m_emisor_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             m_connected_this_cycle = true;
             m_extended_mode_on     = false;
@@ -600,13 +515,13 @@ void app_nus_server_ble_evt_handler(ble_evt_t const *p_ble_evt)
         if (p_gap_evt->conn_handle == m_conn_handle)
         {
             ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
-            NRF_LOG_RAW_INFO("\nCelular desconectado\n");
+            NRF_LOG_RAW_INFO(LOG_INFO " Celular desconectado\n");
             m_conn_handle = BLE_CONN_HANDLE_INVALID; // Invalida el handle del celular
         }
         else if (p_gap_evt->conn_handle == m_emisor_conn_handle)
         {
-            NRF_LOG_RAW_INFO("\nEmisor desconectado");
-            NRF_LOG_RAW_INFO("\n\n\033[1;31m>\033[0m Buscando emisor...\n");
+            NRF_LOG_RAW_INFO(LOG_INFO " Emisor desconectado");
+            NRF_LOG_RAW_INFO("\n" LOG_INFO " Buscando emisor...\n");
 
             m_emisor_conn_handle =
                 BLE_CONN_HANDLE_INVALID; // Invalida el handle del emisor
@@ -748,13 +663,12 @@ void disconnect_all_devices(void)
                                          BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
         APP_ERROR_CHECK(err_code);
         m_emisor_conn_handle = BLE_CONN_HANDLE_INVALID;
-        NRF_LOG_RAW_INFO("\nEmisor desconectado.");
+        NRF_LOG_RAW_INFO(LOG_INFO " Emisor desconectado.");
     }
 }
 
 void app_nus_server_init(app_nus_server_on_data_received_t on_data_received)
 {
-    fds_initialize();
     m_on_data_received = on_data_received;
     gap_params_init();
     services_init();

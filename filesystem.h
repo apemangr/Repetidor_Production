@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "app_error.h"
 #include "calendar.h"
 #include "fds.h"
 #include "nrf_delay.h"
@@ -54,6 +55,7 @@ typedef struct
     uint32_t tiempo_dormido;
     uint32_t tiempo_extendido;
     uint8_t version[3];
+    datetime_t fecha_configuracion;  // Fecha y hora de configuracion
 } config_repeater_t;
 
 extern adc_values_t adc_values;
@@ -94,6 +96,16 @@ void       write_time_to_flash(valor_type_t valor_type, uint32_t valor);
 uint32_t   read_time_from_flash(valor_type_t valor_type, uint32_t default_valor);
 void       load_mac_from_flash(mac_type_t mac_type, uint8_t *mac_out);
 void       save_mac_to_flash(mac_type_t mac_type, uint8_t *mac_addr);
+
+// Configuration functions
+ret_code_t save_config_to_flash(config_repeater_t *p_config);
+ret_code_t load_config_from_flash(config_repeater_t *p_config);
+void       load_default_config(config_repeater_t *p_config);
+void       init_sistema_configuracion(config_repeater_t *p_config);
+ret_code_t send_config_via_ble(void);
+
+// FDS initialization functions
+void       fds_initialize(void);
 
 // typedef struct
 // {
