@@ -6,9 +6,11 @@
 #include "ble_nus_c.h"
 #include "bsp_btn_ble.h"
 #include "fds.h"
+#include "leds.h"
 #include "nordic_common.h"
 #include "nrf_ble_gatt.h"
 #include "nrf_ble_scan.h"
+#include "nrf_gpio.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
@@ -252,6 +254,9 @@ static void ble_nus_c_evt_handler(ble_nus_c_t           *p_ble_nus_c,
         break;
 
     case BLE_NUS_C_EVT_DISCONNECTED:
+        // Apagar LED3 cuando se desconecta el servicio NUS del emisor
+        nrf_gpio_pin_clear(LED3_PIN);
+        
         // NRF_LOG_INFO("Emisor desconectado.");
         // scan_start();
         break;
@@ -289,6 +294,9 @@ void app_nus_client_ble_evt_handler(ble_evt_t const *p_ble_evt)
     case BLE_GAP_EVT_CONNECTED:
         if (p_gap_evt->params.connected.role == BLE_GAP_ROLE_CENTRAL)
         {
+            // Encender LED3 cuando se conecta el emisor
+            nrf_gpio_pin_set(LED3_PIN);
+            
             err_code = ble_nus_c_handles_assign(
                 &m_ble_nus_c, p_ble_evt->evt.gap_evt.conn_handle, NULL);
             APP_ERROR_CHECK(err_code);
@@ -310,6 +318,9 @@ void app_nus_client_ble_evt_handler(ble_evt_t const *p_ble_evt)
         }
         break;
     case BLE_GAP_EVT_DISCONNECTED:
+        // Apagar LED3 cuando se desconecta el emisor
+        nrf_gpio_pin_clear(LED3_PIN);
+        
         // NRF_LOG_RAW_INFO("\nBuscando emisor...");
         // scan_start();
         break;
@@ -323,6 +334,9 @@ void scan_stop(void)
 
 void app_nus_client_init(app_nus_client_on_data_received_t on_data_received)
 {
+    // Inicializar LED3 apagado (no conectado al emisor)
+    nrf_gpio_pin_clear(LED3_PIN);
+    
     m_on_data_received = on_data_received;
     target_periph_addr_init();
     db_discovery_init();

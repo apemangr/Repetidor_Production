@@ -113,6 +113,7 @@ Output/Debug/Obj/ble_app_uart_relay_pca10040_s132/app_nus_client.o: \
  ../../../../../../modules/nrfx/hal/nrf_gpio.h \
  ../../../../../../components/boards/HOLY_REPEATER.h \
  ../../../../../../components/libraries/button/app_button.h \
+ C\:\Users\guill\OneDrive\Desktop\SDK_CON_FIRMWARE\nRF5_SDK_17.1.0_ddde560\examples\ble_central_and_peripheral\Repetidor_Production\leds.h \
  ../../../../../../components/ble/nrf_ble_gatt/nrf_ble_gatt.h \
  ../../../../../../components/ble/nrf_ble_scan/nrf_ble_scan.h \
  ../../../../../../components/libraries/log/nrf_log_default_backends.h

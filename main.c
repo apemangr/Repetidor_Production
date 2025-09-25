@@ -19,6 +19,7 @@
 #include "nordic_common.h"
 #include "nrf_ble_gatt.h"
 #include "nrf_drv_rtc.h"
+#include "nrf_gpio.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
@@ -203,6 +204,10 @@ void handle_rtc_events(void)
             advertising_stop();
             scan_stop();
             app_uart_close();
+            
+            // Apagar LED1 al entrar en modo sleep
+            nrf_gpio_pin_clear(LED1_PIN);
+            
             m_device_active = false;
 
             if (!m_connected_this_cycle)
@@ -242,6 +247,9 @@ void handle_rtc_events(void)
 
         if (!m_device_active)
         {
+            // Encender LED1 al entrar en modo activo
+            nrf_gpio_pin_set(LED1_PIN);
+            
             if (m_extended_mode_on)
             {
                 NRF_LOG_RAW_INFO("\n" LOG_INFO " Transicion a \033[1;32mMODO ACTIVO EXTENDIDO\033[0m");
@@ -708,6 +716,7 @@ int main(void)
     buttons_leds_init();
     power_management_init();
 
+    leds_init();
     ble_stack_init();
     gatt_init();
 
