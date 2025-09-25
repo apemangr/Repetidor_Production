@@ -22,6 +22,8 @@ static void leds_init(void)
     nrf_gpio_cfg_output(LED1_PIN);
     nrf_gpio_cfg_output(LED2_PIN);
     nrf_gpio_cfg_output(LED3_PIN);
+
+    nrf_gpio_pin_set(LED1_PIN);
 }
 
 

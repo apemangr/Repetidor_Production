@@ -255,7 +255,7 @@ static void ble_nus_c_evt_handler(ble_nus_c_t           *p_ble_nus_c,
 
     case BLE_NUS_C_EVT_DISCONNECTED:
         // Apagar LED3 cuando se desconecta el servicio NUS del emisor
-        nrf_gpio_pin_clear(LED3_PIN);
+        //nrf_gpio_pin_clear(LED3_PIN);
         
         // NRF_LOG_INFO("Emisor desconectado.");
         // scan_start();

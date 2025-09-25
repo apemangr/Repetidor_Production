@@ -21,6 +21,7 @@
 #include "nrf_sdh_ble.h"
 #include "nrf_sdh_soc.h"
 #include "variables.h"
+#include "leds.h"
 
 #define APP_BLE_CONN_CFG_TAG           1
 #define DEVICE_NAME                    "Repetidor"
