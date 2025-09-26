@@ -1,6 +1,29 @@
 # Comandos BLE NUS del Repetidor
 
-Este documento describe todos los comandos disponibles via BLE NUS para el dispositivo repetidor.
+Este documento describe todos los co### 💤 **Comando 12: Configurar tiempo de sleep extendido** ✨ **NUEVO**
+- **Formato**: `11112[XXX]`
+- **Ejemplo**: `11112120` (120 segundos)
+- **Descripción**: Configura el tiempo que el dispositivo permanece dormido en modo extendido
+- **Datos**: 3 dígitos en segundos (máximo 9999 segundos)
+
+### 😴 **Comando 13: Leer tiempo de sleep extendido** ✨ **NUEVO**
+- **Formato**: `11113`
+- **Descripción**: Muestra el tiempo de sleep extendido configurado
+- **Respuesta**: Log con el valor en milisegundos y segundos
+
+### 📜 **Comando 14: Solicitar historial por ID**
+- **Formato**: `11114[ID]`
+- **Ejemplo**: `11114123` (solicitar registro #123)
+- **Descripción**: Solicita un registro específico del historial
+- **Datos**: ID numérico del registro
+
+### 📚 **Comando 15: Solicitar historial completo**
+- **Formato**: `11115`
+- **Descripción**: Envía todos los registros de historial via BLE
+- **Respuesta**: Todos los historiales guardados
+
+### ⚙️ **Comando 16: Enviar configuración actual** ✨ **NUEVO**
+- **Formato**: `11116`via BLE NUS para el dispositivo repetidor.
 
 ## Formato de comandos
 Todos los comandos siguen el formato: `111XX[datos]`
@@ -59,19 +82,36 @@ Todos los comandos siguen el formato: `111XX[datos]`
 - **Descripción**: Muestra la fecha y hora almacenada en flash
 - **Respuesta**: Log con fecha en formato YYYY-MM-DD HH:MM:SS
 
-### 📜 **Comando 11: Solicitar historial por ID**
-- **Formato**: `11111[ID]`
-- **Ejemplo**: `11111123` (solicitar registro #123)
+### ⏰ **Comando 10: Configurar tiempo activo extendido** ✨ **NUEVO**
+- **Formato**: `11110[XXX]`
+- **Ejemplo**: `11110030` (30 segundos)
+- **Descripción**: Configura el tiempo que el dispositivo permanece activo en modo extendido
+- **Datos**: 3 dígitos en segundos (máximo 666 segundos)
+
+### 📊 **Comando 11: Leer tiempo activo extendido** ✨ **NUEVO**
+- **Formato**: `11111`
+- **Descripción**: Muestra el tiempo activo extendido configurado
+- **Respuesta**: Log con el valor en milisegundos y segundos
+
+### � **Comando 12: Configurar tiempo de sleep extendido** ✨ **NUEVO**
+- **Formato**: `11112[XXX]`
+- **Ejemplo**: `11112120` (120 segundos)
+- **Descripción**: Configura el tiempo que el dispositivo permanece dormido en modo extendido
+- **Datos**: 3 dígitos en segundos (máximo 9999 segundos)
+
+### �📜 **Comando 13: Solicitar historial por ID**
+- **Formato**: `11113[ID]`
+- **Ejemplo**: `11113123` (solicitar registro #123)
 - **Descripción**: Solicita un registro específico del historial
 - **Datos**: ID numérico del registro
 
-### 📚 **Comando 13: Solicitar historial completo**
-- **Formato**: `11113`
+### 📚 **Comando 14: Solicitar historial completo**
+- **Formato**: `11114`
 - **Descripción**: Envía todos los registros de historial via BLE
 - **Respuesta**: Todos los historiales guardados
 
-### ⚙️ **Comando 14: Enviar configuración actual** ✨ **NUEVO**
-- **Formato**: `11114`
+### ⚙️ **Comando 15: Enviar configuración actual** ✨ **NUEVO**
+- **Formato**: `11115`
 - **Descripción**: Envía toda la configuración actual del dispositivo
 - **Respuesta**: JSON con configuración completa + log detallado
 

@@ -3,6 +3,9 @@
 #include <stdio.h>
 
 #include "app_error.h"
+
+#include "nrf_error.h" // Remover luego
+
 #include "app_nus_client.h"
 #include "app_nus_server.h"
 #include "app_timer.h"

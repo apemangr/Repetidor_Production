@@ -1,5 +1,6 @@
 #include "app_nus_server.h"
 
+#include "app_nus_client.h"
 #include "app_timer.h"
 #include "app_uart.h"
 #include "ble_advdata.h"
@@ -10,6 +11,7 @@
 #include "calendar.h"
 #include "fds.h"
 #include "filesystem.h"
+#include "leds.h"
 #include "nrf.h"
 #include "nrf_ble_gatt.h"
 #include "nrf_ble_qwr.h"
@@ -21,7 +23,6 @@
 #include "nrf_sdh_ble.h"
 #include "nrf_sdh_soc.h"
 #include "variables.h"
-#include "leds.h"
 
 #define APP_BLE_CONN_CFG_TAG           1
 #define DEVICE_NAME                    "Repetidor"
@@ -113,7 +114,7 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                 // Manejo de comandos con un switch-case
                 switch (atoi(command)) // Convierte el comando a entero
                 {
-                case 1: // Comando 01: Guardar MAC
+                case 1: // Comando 01: Guardar MAC del emisor
                 {
                     size_t mac_length = p_evt->params.rx_data.length - 5;
                     if (mac_length == 12) // Verifica que la longitud sea válida
@@ -125,8 +126,8 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                         }
                         NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 01 recibido: "
                                          "Cambiar MAC \x1b[0m");
-                        NRF_LOG_RAW_INFO("\n> MAC recibida: "
-                                         "%02X:%02X:%02X:%02X:%02X:%02X",
+                        NRF_LOG_RAW_INFO(LOG_INFO " MAC recibida: "
+                                                  "%02X:%02X:%02X:%02X:%02X:%02X",
                                          custom_mac_addr_[0], custom_mac_addr_[1],
                                          custom_mac_addr_[2], custom_mac_addr_[3],
                                          custom_mac_addr_[4], custom_mac_addr_[5]);
@@ -141,19 +142,16 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                     }
                     break;
                 }
-                case 2: // Comando 02: Muestra la MAC custom guardada en la
-                    // memoria flash
-                    {
-                        uint8_t mac_print[6];
-                        // Carga la MAC desde la memoria flash
-                        NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 02 recibido: Mostrando "
-                                         "MAC "
-                                         "guardada \x1b[0m");
-                        load_mac_from_flash(MAC_EMISOR, mac_print);
-                        // muestra la MAC
-                    }
-
-                    break;
+                case 2: // Comando 02: Muestra la MAC del Emisor guardada
+                {
+                    uint8_t mac_print[6];
+                    // Carga la MAC desde la memoria flash
+                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 02 recibido: Mostrando "
+                                     "MAC "
+                                     "guardada \x1b[0m");
+                    load_mac_from_flash(MAC_EMISOR, mac_print);
+                }
+                break;
 
                 case 3: // Comando 03: Reiniciar el dispositivo
                     NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 03 recibido: "
@@ -161,66 +159,95 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                                      "dispositivo...\n\n\n\n");
                     nrf_delay_ms(1000);
                     NVIC_SystemReset();
-
                     break;
 
                 case 4: // Guardar tiempo de encendido
                 {
-                    if (p_evt->params.rx_data.length >=
-                        6) // Verifica que haya datos suficientes
+                    if (p_evt->params.rx_data.length > 5) // Verifica que haya al menos "11104X"
                     {
-                        char     time_str[4] = {message[5], message[6], message[7], '\0'};
-                        uint32_t time_in_seconds __attribute__((aligned(4))) =
-                            atoi(time_str) * 1000;
-                        if (time_in_seconds <= 666000)
+                        // Extrae todos los dígitos después de "11104" (desde posición 5 hasta el final)
+                        size_t digits_len   = p_evt->params.rx_data.length - 5;
+                        char   time_str[16] = {0}; // Buffer para hasta 15 dígitos
+
+                        if (digits_len < sizeof(time_str))
                         {
-                            NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 04 recibido: "
-                                             "Cambiar tiempo de encendido \x1b[0m");
-                            write_time_to_flash(TIEMPO_ENCENDIDO, time_in_seconds);
+                            // Copia todos los dígitos disponibles
+                            memcpy(time_str, &message[5], digits_len);
+                            time_str[digits_len]                                 = '\0';
+
+                            uint32_t time_in_seconds __attribute__((aligned(4))) = atoi(time_str);
+                            uint32_t time_in_ms __attribute__((aligned(4)))      = time_in_seconds * 1000; // Convertir a milisegundos
+
+                            if (time_in_seconds <= 9999) // Máximo 9999 segundos (~2.7 horas)
+                            {
+                                NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 04 recibido: "
+                                                 "Cambiar tiempo de encendido \x1b[0m");
+
+                                write_time_to_flash(TIEMPO_ENCENDIDO, time_in_ms);
+                            }
+                            else
+                            {
+                                NRF_LOG_RAW_INFO(LOG_WARN "\nEl tiempo de encendido excede el máximo "
+                                                          "permitido (9999 segundos).");
+                            }
                         }
                         else
                         {
-                            NRF_LOG_WARNING("El tiempo de encendido excede el máximo "
-                                            "permitido (666 segundos).");
+                            NRF_LOG_WARNING("Demasiados dígitos para el tiempo de encendido.");
                         }
                     }
                     else
                     {
-                        NRF_LOG_WARNING("Comando 04 recibido con datos insuficientes.");
+                        NRF_LOG_RAW_INFO(LOG_WARN "Comando 04 recibido con datos insuficientes.");
                     }
                     break;
                 }
 
-                case 5: // Comando 05: Leer tiempo de encendido desde la
-                    // memoria flash
-                    {
-                        NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 05 recibido: "
-                                         "Leer tiempo de encendido \x1b[0m");
-                        uint32_t sleep_time_ms = read_time_from_flash(
-                            TIEMPO_ENCENDIDO, DEFAULT_DEVICE_ON_TIME_MS);
+                case 5: // Comando 05: Leer tiempo de encendido guardado
+                {
+                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 05 recibido: "
+                                     "Leer tiempo de encendido \x1b[0m");
+                    uint32_t sleep_time_ms = read_time_from_flash(
+                        TIEMPO_ENCENDIDO, DEFAULT_DEVICE_ON_TIME_MS);
+                    NRF_LOG_RAW_INFO(LOG_INFO " Tiempo de encendido actual: %u segundos", sleep_time_ms / 1000);
 
-                        break;
-                    }
+                    break;
+                }
 
                 case 6: // Comando 06: Guardar tiempo de apagado
                 {
-                    if (p_evt->params.rx_data.length >=
-                        6) // Verifica que haya datos suficientes
+                    if (p_evt->params.rx_data.length > 5) // Verifica que haya al menos "11106X"
                     {
-                        char     time_str[4] = {message[5], message[6], message[7], '\0'};
-                        uint32_t time_in_seconds __attribute__((aligned(4))) =
-                            atoi(time_str) * 1000;
-                        if (time_in_seconds <= 6666000) // Verifica que no exceda el máximo
-                        // permitido
+                        // Extrae todos los dígitos después de "11106" (desde posición 5 hasta el final)
+                        size_t digits_len   = p_evt->params.rx_data.length - 5;
+                        char   time_str[16] = {0}; // Buffer para hasta 15 dígitos
+
+                        if (digits_len < sizeof(time_str))
                         {
-                            NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 06 recibido: "
-                                             "Cambiar tiempo de dormido \x1b[0m");
-                            write_time_to_flash(TIEMPO_SLEEP, time_in_seconds);
+                            // Copia todos los dígitos disponibles
+                            memcpy(time_str, &message[5], digits_len);
+                            time_str[digits_len]                                 = '\0';
+
+                            uint32_t time_in_seconds __attribute__((aligned(4))) = atoi(time_str);
+                            uint32_t time_in_ms __attribute__((aligned(4)))      = time_in_seconds * 1000; // Convertir a milisegundos
+
+                            if (time_in_seconds <= 9999) // Máximo 9999 segundos (~2.7 horas)
+                            {
+                                NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 06 recibido: "
+                                                 "Cambiar tiempo de dormido \x1b[0m");
+
+                                write_time_to_flash(TIEMPO_SLEEP, time_in_ms);
+
+                            }
+                            else
+                            {
+                                NRF_LOG_RAW_INFO(LOG_WARN " El tiempo de dormido excede el maximo "
+                                                "permitido (9999 segundos).");
+                            }
                         }
                         else
                         {
-                            NRF_LOG_WARNING("El tiempo de dormido excede el máximo "
-                                            "permitido (6666 segundos).");
+                            NRF_LOG_WARNING("Demasiados dígitos para el tiempo de dormido.");
                         }
                     }
                     else
@@ -233,10 +260,11 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                 case 7: // Comando 07: Leer tiempo de apagado desde la memoria flash
                 {
                     NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 07 recibido: "
-                                     "Leer tiempo de dormido\x1b[0m");
+                                     "Leer tiempo de sleep\x1b[0m");
                     uint32_t sleep_time_ms = read_time_from_flash(
                         TIEMPO_SLEEP, DEFAULT_DEVICE_SLEEP_TIME_MS);
-
+                    
+                    NRF_LOG_RAW_INFO(LOG_INFO " Tiempo de sleep actual: %u segundos", sleep_time_ms / 1000);
                     break;
                 }
 
@@ -245,19 +273,17 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                     NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 08 recibido: Guardar "
                                      "fecha y hora\x1b[0m");
 
-                    if (p_evt->params.rx_data.length >=
-                        19) // 5 de comando + 14 de fecha/hora
+                    if (p_evt->params.rx_data.length >= 19) // 5 de comando + 14 de fecha/hora
                     {
-                        const char *fecha_iso =
-                            &message[5]; // Apunta al inicio de la fecha/hora
+                        const char *fecha_iso = &message[5]; // Al inicio de la fecha/hora
 
-                        datetime_t dt;
+                        datetime_t  dt;
                         if (sscanf(fecha_iso, "%4hu%2hhu%2hhu%2hhu%2hhu%2hhu", &dt.year,
                                    &dt.month, &dt.day, &dt.hour, &dt.minute,
                                    &dt.second) == 6)
                         {
-                            NRF_LOG_RAW_INFO("\nFecha recibida: "
-                                             "%04u-%02u-%02u %02u:%02u:%02u",
+                            NRF_LOG_RAW_INFO(LOG_INFO " Fecha recibida: "
+                                                      "%04u-%02u-%02u %02u:%02u:%02u",
                                              dt.year, dt.month, dt.day, dt.hour, dt.minute,
                                              dt.second);
 
@@ -266,18 +292,18 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
 
                             if (err_code != NRF_SUCCESS)
                             {
-                                NRF_LOG_ERROR("Error guardando: 0x%X", err_code);
+                                NRF_LOG_RAW_INFO(LOG_FAIL " Error guardando: 0x%X", err_code);
                             }
                         }
                         else
                         {
-                            NRF_LOG_WARNING("Formato inválido. Se esperaba "
-                                            "YYYYMMDDHHMMSS.");
+                            NRF_LOG_RAW_INFO(LOG_WARN " Formato inválido. Se esperaba "
+                                                      "YYYYMMDDHHMMSS.");
                         }
                     }
                     else
                     {
-                        NRF_LOG_WARNING("Datos insuficientes. Se esperaban 14 dígitos");
+                        NRF_LOG_RAW_INFO(LOG_WARN " Datos insuficientes. Se esperaban 14 dígitos");
                     }
                     break;
                 }
@@ -291,22 +317,133 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
 
                     // Mostrar fecha leída
                     NRF_LOG_RAW_INFO(
-                        "\n>> Fecha almacenada: %04u-%02u-%02u %02u:%02u:%02u", dt.year,
+                        LOG_INFO " Fecha almacenada: %04u-%02u-%02u %02u:%02u:%02u", dt.year,
                         dt.month, dt.day, dt.hour, dt.minute, dt.second);
 
                     break;
                 }
-                case 10: // Comando para solicitar el último historial al periférico
+                case 10: // Guarda en la memoria el tiempo de encendido extendido
                 {
-                    // Work in progress
+                    if (p_evt->params.rx_data.length > 5) // Verifica que haya al menos "11110X"
+                    {
+                        // Extrae todos los dígitos después de "11110" (desde posición 5 hasta el final)
+                        size_t digits_len   = p_evt->params.rx_data.length - 5;
+                        char   time_str[16] = {0}; // Buffer para hasta 15 dígitos
+
+                        if (digits_len < sizeof(time_str))
+                        {
+                            // Copia todos los dígitos disponibles
+                            memcpy(time_str, &message[5], digits_len);
+                            time_str[digits_len]                                 = '\0';
+
+                            uint32_t time_in_seconds __attribute__((aligned(4))) = atoi(time_str);
+                            uint32_t time_in_ms                                  = time_in_seconds * 1000; // Convertir a milisegundos
+
+                            if (time_in_seconds <= 9999) // Máximo 9999 segundos (~2.7 horas)
+                            {
+                                NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 10 recibido: "
+                                                 "Cambiar tiempo de encendido extendido \x1b[0m");
+
+                                write_time_to_flash(TIEMPO_EXTENDED_ENCENDIDO, time_in_ms);
+                            }
+                            else
+                            {
+                                NRF_LOG_RAW_INFO(LOG_WARN " El tiempo de encendido extendido excede el máximo "
+                                                "permitido (9999 segundos).");
+                            }
+                        }
+                        else
+                        {
+                            NRF_LOG_RAW_INFO(LOG_WARN " Demasiados dígitos para el tiempo de encendido extendido.");
+                        }
+                    }
+                    else
+                    {
+                        NRF_LOG_RAW_INFO(LOG_WARN " Comando 10 recibido con datos insuficientes.");
+                    }
                     break;
                 }
-                case 11: // Solicitar un registro de historial por ID
+
+                case 11: // Comando 11: Leer tiempo de encendido extendido desde la memoria flash
                 {
-                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 11 recibido: Solicitar registro de historial por ID\x1b[0m");
+                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 11 recibido: "
+                                     "Leer tiempo de encendido extendido \x1b[0m");
+                    uint32_t extended_time_ms = read_time_from_flash(
+                        TIEMPO_EXTENDED_ENCENDIDO, DEFAULT_DEVICE_EXTENDED_ON_TIME_MS);
+
+                    NRF_LOG_RAW_INFO(LOG_INFO " Tiempo de encendido extendido actual : %u segundos",
+                                     extended_time_ms / 1000);
+                    break;
+                }
+                case 12: // Comando 12: Guardar tiempo de dormido extendido
+                {
+                    if (p_evt->params.rx_data.length > 5) // Verifica que haya al menos "11112X"
+                    {
+                        // Extrae todos los dígitos después de "11112" (desde posición 5 hasta el final)
+                        size_t digits_len   = p_evt->params.rx_data.length - 5;
+                        char   time_str[16] = {0}; // Buffer para hasta 15 dígitos
+
+                        if (digits_len < sizeof(time_str))
+                        {
+                            // Copia todos los dígitos disponibles
+                            memcpy(time_str, &message[5], digits_len);
+                            time_str[digits_len]                                 = '\0';
+
+                            uint32_t time_in_seconds __attribute__((aligned(4))) = atoi(time_str);
+                            uint32_t time_in_ms __attribute__((aligned(4)))      = time_in_seconds * 1000; // Convertir a milisegundos
+
+                            if (time_in_seconds <= 9999) // Máximo 9999 segundos (~2.7 horas)
+                            {
+                                NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 12 recibido: "
+                                                 "Cambiar tiempo de dormido extendido \x1b[0m");
+                                NRF_LOG_RAW_INFO(LOG_INFO " Configurando: %u segundos (%u ms)",
+                                                 time_in_seconds, time_in_ms);
+
+                                write_time_to_flash(TIEMPO_EXTENDED_SLEEP, time_in_ms);
+
+                                // Confirmar que se guardó correctamente
+                                uint32_t tiempo_leido = read_time_from_flash(
+                                    TIEMPO_EXTENDED_SLEEP, DEFAULT_DEVICE_EXTENDED_SLEEP_TIME_MS);
+                                NRF_LOG_RAW_INFO(LOG_INFO " Tiempo de dormido extendido guardado: %u ms (%u segundos)",
+                                                 tiempo_leido, tiempo_leido / 1000);
+                            }
+                            else
+                            {
+                                NRF_LOG_WARNING("El tiempo de dormido extendido excede el máximo "
+                                                "permitido (9999 segundos).");
+                            }
+                        }
+                        else
+                        {
+                            NRF_LOG_WARNING("Demasiados dígitos para el tiempo de dormido extendido.");
+                        }
+                    }
+                    else
+                    {
+                        NRF_LOG_WARNING("Comando 12 recibido con datos insuficientes.");
+                    }
+                    break;
+                }
+                case 13: // Lee el tiempo de sleep extendido
+                {
+                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 13 recibido: "
+                                     "Leer tiempo de dormido extendido\x1b[0m");
+                    uint32_t extended_sleep_time_ms = read_time_from_flash(
+                        TIEMPO_EXTENDED_SLEEP, DEFAULT_DEVICE_EXTENDED_SLEEP_TIME_MS);
+
+                    NRF_LOG_RAW_INFO("\nTiempo de dormido extendido actual: %u ms (%u segundos)",
+                                     extended_sleep_time_ms, extended_sleep_time_ms / 1000);
+
+                    break;
+                }
+                case 14: // Solicitar un registro de historial por ID
+                {
+                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 14 recibido: Solicitar registro de "
+                                     "historial por ID\x1b[0m");
                     if (p_evt->params.rx_data.length > 5) // Verifica que haya datos suficientes
                     {
-                        // Extrae el ID del registro como string (todo lo que sigue después de "11111")
+                        // Extrae el ID del registro como string (todo lo que sigue después de
+                        // "11114")
                         size_t id_len    = p_evt->params.rx_data.length - 5;
                         char   id_str[8] = {0}; // Soporta hasta 7 dígitos, ajusta si necesitas más
                         if (id_len < sizeof(id_str))
@@ -314,21 +451,104 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                             memcpy(id_str, &message[5], id_len);
                             id_str[id_len]       = '\0';
                             uint16_t registro_id = (uint16_t)atoi(id_str);
+
                             // Llama a la función para solicitar el registro por ID
                             store_history registro_historial;
                             err_code = read_history_record_by_id(registro_id, &registro_historial);
                             if (err_code == NRF_SUCCESS)
                             {
-                                NRF_LOG_RAW_INFO("\nSolicitud de registro %u enviada correctamente.", registro_id);
-                                // Imprime el registro de historial
+                                NRF_LOG_RAW_INFO(
+                                    "\nRegistro %u leido correctamente, enviando por NUS...",
+                                    registro_id);
+
+                                // Preparar array de datos en formato hex (igual que
+                                // send_all_history)
+                                uint8_t  data_array[244];
+                                uint16_t position = 0;
+
+                                // Byte 0: Magic
+                                data_array[position++] = 0x08;
+
+                                // Bytes 1-7: Fecha y hora
+                                data_array[position++] = registro_historial.day;
+                                data_array[position++] = registro_historial.month;
+                                data_array[position++] = (registro_historial.year >> 8) & 0xFF;
+                                data_array[position++] = (registro_historial.year & 0xFF);
+                                data_array[position++] = registro_historial.hour;
+                                data_array[position++] = registro_historial.minute;
+                                data_array[position++] = registro_historial.second;
+
+                                // Bytes 8-11: Contador (4 bytes) - convertir a big-endian
+                                data_array[position++] = (registro_historial.contador >> 24) & 0xFF;
+                                data_array[position++] = (registro_historial.contador >> 16) & 0xFF;
+                                data_array[position++] = (registro_historial.contador >> 8) & 0xFF;
+                                data_array[position++] = (registro_historial.contador & 0xFF);
+
+                                // Bytes 12-15: V1, V2 (2 bytes cada uno) - convertir a big-endian
+                                data_array[position++] = (registro_historial.V1 >> 8) & 0xFF;
+                                data_array[position++] = (registro_historial.V1 & 0xFF);
+                                data_array[position++] = (registro_historial.V2 >> 8) & 0xFF;
+                                data_array[position++] = (registro_historial.V2 & 0xFF);
+
+                                // Byte 16: Battery
+                                data_array[position++] = registro_historial.battery;
+
+                                // Bytes 17-28: MACs (rellenar con ceros)
+                                for (int j = 0; j < 12; j++)
+                                {
+                                    data_array[position++] = 0x00;
+                                }
+
+                                // Bytes 29-40: V3-V8 (2 bytes cada uno) - convertir a big-endian
+                                data_array[position++] = (registro_historial.V3 >> 8) & 0xFF;
+                                data_array[position++] = (registro_historial.V3 & 0xFF);
+                                data_array[position++] = (registro_historial.V4 >> 8) & 0xFF;
+                                data_array[position++] = (registro_historial.V4 & 0xFF);
+                                data_array[position++] = (registro_historial.V5 >> 8) & 0xFF;
+                                data_array[position++] = (registro_historial.V5 & 0xFF);
+                                data_array[position++] = (registro_historial.V6 >> 8) & 0xFF;
+                                data_array[position++] = (registro_historial.V6 & 0xFF);
+                                data_array[position++] = (registro_historial.V7 >> 8) & 0xFF;
+                                data_array[position++] = (registro_historial.V7 & 0xFF);
+                                data_array[position++] = (registro_historial.V8 >> 8) & 0xFF;
+                                data_array[position++] = (registro_historial.V8 & 0xFF);
+
+                                // Byte 41: Temperatura
+                                data_array[position++] = registro_historial.temp;
+
+                                // Byte 42-43: ID del registro solicitado (en lugar de
+                                // last_position)
+                                data_array[position++] = (registro_id >> 8) & 0xFF;
+                                data_array[position++] = (registro_id & 0xFF);
+
+                                // Enviar por NUS al celular
+                                ret_code_t send_result =
+                                    app_nus_server_send_data(data_array, position);
+                                if (send_result == NRF_SUCCESS)
+                                {
+                                    NRF_LOG_RAW_INFO("\n\x1b[1;32m> Registro #%u enviado por NUS "
+                                                     "exitosamente\x1b[0m",
+                                                     registro_id);
+                                }
+                                else
+                                {
+                                    NRF_LOG_RAW_INFO("\n\x1b[1;31m> Error enviando registro #%u "
+                                                     "por NUS: 0x%X\x1b[0m",
+                                                     registro_id, send_result);
+                                }
+
+                                // También imprimir en consola para depuración
                                 char titulo[41];
-                                snprintf(titulo, sizeof(titulo), "Historial recibido \x1B[33m#%u\x1B[0m", registro_id);
+                                snprintf(titulo, sizeof(titulo),
+                                         "Historial enviado \x1B[33m#%u\x1B[0m", registro_id);
                                 print_history_record(&registro_historial, titulo);
                                 NRF_LOG_FLUSH();
                             }
                             else
                             {
-                                NRF_LOG_RAW_INFO("\nError al solicitar el registro %u: 0x%X", registro_id, err_code);
+                                NRF_LOG_RAW_INFO(
+                                    "\n\x1b[1;31m> Error al leer el registro %u: 0x%X\x1b[0m",
+                                    registro_id, err_code);
                             }
                         }
                         else
@@ -338,22 +558,18 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                     }
                     break;
                 }
-                case 12: // Guardar un nuevo historial con valores inventados
 
-                    // Descartar funcionalidad
-                    break;
-
-                case 13: // Pide una lectura de todos los historiales
+                case 15: // Pide una lectura de todos los historiales
                 {
-                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 13 : Solicitud del historial completo\x1b[0m");
+                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 15 : Solicitud del historial completo\x1b[0m");
                     // Llama a la función para solicitar el historial completo
                     send_all_history_ble();
 
                     break;
                 }
-                case 14: // Comando 14: Enviar configuracion actual
+                case 16: // Comando 16: Enviar configuracion actual
                 {
-                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 14 recibido: Enviar configuracion actual\x1b[0m");
+                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 16 recibido: Enviar configuracion actual\x1b[0m");
                     send_config_via_ble();
                     break;
                 }
@@ -498,15 +714,15 @@ void app_nus_server_ble_evt_handler(ble_evt_t const *p_ble_evt)
         {
             NRF_LOG_RAW_INFO(LOG_OK " Celular conectado");
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
-            restart_on_rtc();
+            restart_extended_on_rtc();
         }
         else if (p_gap_evt->params.connected.role == BLE_GAP_ROLE_CENTRAL)
         {
             NRF_LOG_RAW_INFO(LOG_OK " Emisor conectado");
-            m_emisor_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+            m_emisor_conn_handle   = p_ble_evt->evt.gap_evt.conn_handle;
             m_connected_this_cycle = true;
             m_extended_mode_on     = false;
-            
+
             // Actualizar contador RTC inmediatamente a tiempos normales
             restart_on_rtc();
         }
@@ -524,8 +740,7 @@ void app_nus_server_ble_evt_handler(ble_evt_t const *p_ble_evt)
             NRF_LOG_RAW_INFO(LOG_INFO " Emisor desconectado");
             NRF_LOG_RAW_INFO("\n" LOG_INFO " Buscando emisor...\n");
 
-            m_emisor_conn_handle =
-                BLE_CONN_HANDLE_INVALID; // Invalida el handle del emisor
+            m_emisor_conn_handle = BLE_CONN_HANDLE_INVALID;
             scan_start();
         }
         break;
@@ -655,7 +870,7 @@ void disconnect_all_devices(void)
                                          BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
         APP_ERROR_CHECK(err_code);
         m_conn_handle = BLE_CONN_HANDLE_INVALID;
-        NRF_LOG_RAW_INFO("\nCelular desconectado.");
+        NRF_LOG_RAW_INFO(LOG_INFO " Celular desconectado.");
     }
 
     if (m_emisor_conn_handle != BLE_CONN_HANDLE_INVALID)

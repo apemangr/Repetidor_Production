@@ -104,39 +104,4 @@ ret_code_t send_config_via_ble(void);
 // FDS initialization functions
 void       fds_initialize(void);
 
-// typedef struct
-// {
-//   uint8_t company[2];
-//   uint8_t total_reset[4];
-//   uint8_t total_adv[4];
-//   bool Enable_Custom_mac;
-//   uint8_t mac_custom[6];
-//   uint8_t sleep_time[3];
-//   uint8_t adv_time[2];
-//   uint8_t mac_original[6];
-//   uint8_t Type_resistor;
-//   uint8_t Type_sensor;
-//   uint8_t Type_battery;
-//   uint8_t offset_plate_bolt; // distancia desde sensor al
-//   uint8_t Version[3];
-//   uint8_t Offset_sensor_cut;
-//   uint8_t Offset_sensor_bolt;
-//   uint8_t Offset_sensor_measure;
-//   uint8_t Sending_Position;
-//   uint8_t type_advertising;
-//   uint8_t Sensibility;
-//   uint8_t fecha[6];
-//   uint8_t hora[6];
-//   uint8_t reset[14];
-//   uint8_t second;
-//   uint8_t minute;
-//   uint8_t hour;
-//   uint8_t date;
-//   uint8_t month;
-//   uint16_t year;
-//   uint16_t last_history;
-// } store_flash;
-
-// extern store_flash Flash_array;
-
 #endif // FILESYSTEM_H

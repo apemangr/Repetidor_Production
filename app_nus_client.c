@@ -223,7 +223,7 @@ static void ble_nus_c_evt_handler(ble_nus_c_t           *p_ble_nus_c,
         err_code  = app_nus_client_send_data(cmd_id, 2);
         if (err_code != NRF_SUCCESS)
         {
-            NRF_LOG_RAW_INFO("\nFallo al solicitar datos de ADC y contador: %d", err_code);
+            NRF_LOG_RAW_INFO(LOG_FAIL " Fallo al solicitar datos de ADC y contador: %d", err_code);
         }
 
         // Solicitar el ultimo historial del emisor
@@ -233,7 +233,7 @@ static void ble_nus_c_evt_handler(ble_nus_c_t           *p_ble_nus_c,
         err_code  = app_nus_client_send_data(cmd_id, 2);
         if (err_code != NRF_SUCCESS)
         {
-            NRF_LOG_RAW_INFO("\nFallo al solicitar el ultimo historial: %d", err_code);
+            NRF_LOG_RAW_INFO(LOG_FAIL " Fallo al solicitar el ultimo historial: %d", err_code);
         }
 
         break;
