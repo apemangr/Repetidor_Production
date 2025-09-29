@@ -715,9 +715,11 @@ int main(void)
                      "\033[1;90mCrea\033[1;31mLab\033[0m\n");
 
     base_timer_init();
-    rtc_init();
+    
+    fds_initialize();
+
     uart_init();
-    buttons_leds_init();
+    //buttons_leds_init();
     power_management_init();
 
     leds_init();
@@ -725,7 +727,6 @@ int main(void)
     gatt_init();
 
     // Inicializar sistema de almacenamiento FDS
-    fds_initialize();
 
     init_sistema_configuracion(&config_repeater);
 
@@ -733,6 +734,8 @@ int main(void)
     app_nus_server_init(app_nus_server_on_data_received);
     app_nus_client_init(app_nus_client_on_data_received);
 
+
+    rtc_init();
     calendar_init();
 
     calendar_set_datetime();
