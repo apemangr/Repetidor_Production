@@ -642,7 +642,7 @@ void load_mac_from_flash(mac_type_t mac_type, uint8_t *mac_out)
             mac_out[2] = 0x00;
             mac_out[3] = 0x00;
             mac_out[4] = 0x00;
-            mac_out[5] = 0x04;
+            mac_out[5] = 0x03;
         }
         else // MAC_REPETIDOR
         {
@@ -1057,20 +1057,20 @@ void load_default_config(config_repeater_t *p_config)
 
     // MACs predeterminadas
     // MAC del emisor
-    p_config->mac_emisor[0] = 0x04;
-    p_config->mac_emisor[1] = 0x00;
-    p_config->mac_emisor[2] = 0x00;
+    p_config->mac_emisor[5] = 0x04;
+    p_config->mac_emisor[4] = 0x00;
     p_config->mac_emisor[3] = 0x00;
-    p_config->mac_emisor[4] = 0xAB;
-    p_config->mac_emisor[5] = 0xC3;
+    p_config->mac_emisor[2] = 0x00;
+    p_config->mac_emisor[1] = 0xAB;
+    p_config->mac_emisor[0] = 0xC3;
 
     // MAC del repetidor
-    p_config->mac_repetidor[0] = 0x6A;
-    p_config->mac_repetidor[1] = 0x0C;
-    p_config->mac_repetidor[2] = 0x04;
-    p_config->mac_repetidor[3] = 0xB3;
-    p_config->mac_repetidor[4] = 0x72;
-    p_config->mac_repetidor[5] = 0xE4;
+    p_config->mac_repetidor[5] = 0x6A;
+    p_config->mac_repetidor[4] = 0x0C;
+    p_config->mac_repetidor[3] = 0x04;
+    p_config->mac_repetidor[2] = 0xB3;
+    p_config->mac_repetidor[1] = 0x72;
+    p_config->mac_repetidor[0] = 0xE4;
 
     // Tiempos predeterminados
     p_config->tiempo_encendido = DEFAULT_DEVICE_ON_TIME_MS;
@@ -1274,16 +1274,16 @@ void init_sistema_configuracion(config_repeater_t *p_config)
 
     // Mostrar MACs (una linea por MAC para respetar limite de argumentos)
     NRF_LOG_RAW_INFO(" - MAC Emisor    : %02X:%02X:%02X:",
-                     p_config->mac_emisor[5], p_config->mac_emisor[4], p_config->mac_emisor[3]);
+                     p_config->mac_emisor[0], p_config->mac_emisor[1], p_config->mac_emisor[2]);
     NRF_LOG_RAW_INFO("%02X:%02X:%02X\n",
-                     p_config->mac_emisor[2], p_config->mac_emisor[1], p_config->mac_emisor[0]);
+                     p_config->mac_emisor[3], p_config->mac_emisor[4], p_config->mac_emisor[5]);
     NRF_LOG_FLUSH();
     nrf_delay_ms(15);
 
     NRF_LOG_RAW_INFO(" - MAC Repetidor : %02X:%02X:%02X:",
-                     p_config->mac_repetidor[5], p_config->mac_repetidor[4], p_config->mac_repetidor[3]);
+                     p_config->mac_repetidor[0], p_config->mac_repetidor[1], p_config->mac_repetidor[2]);
     NRF_LOG_RAW_INFO("%02X:%02X:%02X\n",
-                     p_config->mac_repetidor[2], p_config->mac_repetidor[1], p_config->mac_repetidor[0]);
+                     p_config->mac_repetidor[3], p_config->mac_repetidor[4], p_config->mac_repetidor[5]);
     NRF_LOG_FLUSH();
     nrf_delay_ms(15);
 

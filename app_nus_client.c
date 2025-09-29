@@ -34,25 +34,40 @@ static ble_uuid_t const                  m_nus_uuid = {.uuid = BLE_UUID_NUS_SERV
                                                        .type = NUS_SERVICE_UUID_TYPE};
 
 // Función para inicializar `m_target_periph_addr` con la MAC leída
-static void target_periph_addr_init(void)
+void target_periph_addr_init(void)
 {
+    // Buffer temporal para cargar la MAC
+    static uint8_t temp_mac[6];
+    
     // Carga la MAC desde la memoria flash
-    // 80 --
     NRF_LOG_RAW_INFO("\n" LOG_EXEC " Configurando filtrado...");
     nrf_delay_ms(20);
-    load_mac_from_flash(MAC_EMISOR, m_target_periph_addr.addr);
+    load_mac_from_flash(MAC_EMISOR, temp_mac);
 
     // Verifica si la MAC se ha cargado correctamente
-    if (m_target_periph_addr.addr[0] == 0 && m_target_periph_addr.addr[1] == 0 &&
-        m_target_periph_addr.addr[2] == 0 && m_target_periph_addr.addr[3] == 0 &&
-        m_target_periph_addr.addr[4] == 0 && m_target_periph_addr.addr[5] == 0)
+    if (temp_mac[0] == 0 && temp_mac[1] == 0 && temp_mac[2] == 0 && 
+        temp_mac[3] == 0 && temp_mac[4] == 0 && temp_mac[5] == 0)
     {
         NRF_LOG_RAW_INFO(LOG_FAIL " No se pudo cargar la direccion "
                                   "MAC desde la memoria flash.\033[0m\n");
         return;
     }
+    
+    // Invertir los bytes para el filtro BLE (BLE usa little-endian)
+    // Si guardamos aabbccddeeff, BLE espera ffeeddccbbaa para el filtro
+    for (int i = 0; i < 6; i++)
+    {
+        m_target_periph_addr.addr[i] = temp_mac[5 - i];
+    }
+    
     // Configura la dirección del dispositivo objetivo
     m_target_periph_addr.addr_type = BLE_GAP_ADDR_TYPE_RANDOM_STATIC;
+    
+    // Log para verificar la MAC configurada para filtrado
+    NRF_LOG_RAW_INFO(LOG_INFO " MAC para filtrado: %02X:%02X:%02X:%02X:%02X:%02X",
+                     m_target_periph_addr.addr[5], m_target_periph_addr.addr[4],
+                     m_target_periph_addr.addr[3], m_target_periph_addr.addr[2],
+                     m_target_periph_addr.addr[1], m_target_periph_addr.addr[0]);
     // memcpy(m_target_periph_addr.addr, m_target_periph_addr.addr,
     // sizeof(m_target_periph_addr.addr));
 

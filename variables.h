@@ -9,7 +9,7 @@
 #define ECHOBACK_BLE_UART_DATA 1
 
 // Constantes tiempo por defecto
-#define DEFAULT_DEVICE_ON_TIME_MS             1000
+#define DEFAULT_DEVICE_ON_TIME_MS             10000
 #define DEFAULT_DEVICE_SLEEP_TIME_MS          (600000 + 3000) // 3 segundos de offset por delay de calculos
 #define DEFAULT_DEVICE_EXTENDED_ON_TIME_MS    400000
 #define DEFAULT_DEVICE_EXTENDED_SLEEP_TIME_MS 1000

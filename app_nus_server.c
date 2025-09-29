@@ -144,15 +144,16 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                         ret_code_t save_result = save_config_to_flash(&config_repeater);
                         if (save_result == NRF_SUCCESS)
                         {
-                            NRF_LOG_RAW_INFO(LOG_OK " Configuración guardada correctamente en flash");
+                            NRF_LOG_RAW_INFO(LOG_OK " Configuracion guardada correctamente en flash");
                         }
                         else
                         {
-                            NRF_LOG_RAW_INFO(LOG_FAIL " Error al guardar configuración: 0x%X", save_result);
+                            NRF_LOG_RAW_INFO(LOG_FAIL " Error al guardar configuracion: 0x%X", save_result);
                         }
 
                         // También guardar la MAC individualmente para compatibilidad
                         save_mac_to_flash(MAC_EMISOR, custom_mac_addr_);
+                      
                     }
                     else
                     {
@@ -650,6 +651,73 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                 {
                     NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 16 recibido: Enviar configuracion actual\x1b[0m");
                     send_config_via_ble();
+                    break;
+                }
+                case 17: // Comando 17: Guardar MAC del repetidor
+                {
+                    size_t mac_length = p_evt->params.rx_data.length - 5;
+                    if (mac_length == 12) // Verifica que la longitud sea válida
+                    {
+                        uint8_t mac_repetidor[6];
+                        // Parsear la MAC en orden secuencial: aabbccddeeff -> [aa][bb][cc][dd][ee][ff] en índices [0][1][2][3][4][5]
+                        for (size_t i = 0; i < 6; i++)
+                        {
+                            char byte_str[3] = {message[5 + i * 2], message[6 + i * 2], '\0'};
+                            mac_repetidor[i] = (uint8_t)strtol(byte_str, NULL, 16);
+                        }
+                        NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 17 recibido: "
+                                         "Cambiar MAC del repetidor \x1b[0m");
+                        NRF_LOG_RAW_INFO(LOG_INFO " MAC del repetidor recibida: "
+                                                  "%02X:%02X:%02X:%02X:%02X:%02X",
+                                         mac_repetidor[0], mac_repetidor[1],
+                                         mac_repetidor[2], mac_repetidor[3],
+                                         mac_repetidor[4], mac_repetidor[5]);
+
+                        // Actualizar la estructura de configuración con la nueva MAC del repetidor
+                        memcpy(config_repeater.mac_repetidor, mac_repetidor, 6);
+                        NRF_LOG_RAW_INFO(LOG_OK " Estructura config_repeater actualizada con nueva MAC del repetidor");
+
+                        // Guardar la configuración completa en flash (incluye la nueva MAC del repetidor)
+                        ret_code_t save_result = save_config_to_flash(&config_repeater);
+                        if (save_result == NRF_SUCCESS)
+                        {
+                            NRF_LOG_RAW_INFO(LOG_OK " Configuracion guardada correctamente en flash");
+                        }
+                        else
+                        {
+                            NRF_LOG_RAW_INFO(LOG_FAIL " Error al guardar configuracion: 0x%X", save_result);
+                        }
+
+                        // También guardar la MAC del repetidor individualmente para compatibilidad
+                        save_mac_to_flash(MAC_REPETIDOR, mac_repetidor);
+                    }
+                    else
+                    {
+                        NRF_LOG_WARNING("Longitud de MAC del repetidor invalida: %d", mac_length);
+                    }
+                    break;
+                }
+                case 18: // Comando 18: Leer MAC del repetidor guardada
+                {
+                    uint8_t mac_print[6];
+                    // Carga la MAC del repetidor desde la memoria flash
+                    NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 18 recibido: Mostrando "
+                                     "MAC del repetidor guardada \x1b[0m");
+                    load_mac_from_flash(MAC_REPETIDOR, mac_print);
+                    
+                    // Verificar si se cargó una MAC válida
+                    if (mac_print[0] == 0 && mac_print[1] == 0 && mac_print[2] == 0 && 
+                        mac_print[3] == 0 && mac_print[4] == 0 && mac_print[5] == 0)
+                    {
+                        NRF_LOG_RAW_INFO(LOG_WARN " No hay MAC del repetidor guardada en memoria");
+                    }
+                    else
+                    {
+                        NRF_LOG_RAW_INFO(LOG_OK " MAC del repetidor: "
+                                                 "%02X:%02X:%02X:%02X:%02X:%02X",
+                                         mac_print[0], mac_print[1], mac_print[2],
+                                         mac_print[3], mac_print[4], mac_print[5]);
+                    }
                     break;
                 }
                 default: // Comando desconocido

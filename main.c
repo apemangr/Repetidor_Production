@@ -16,6 +16,7 @@
 #include "ble_hci.h"
 #include "ble_nus.h"
 #include "bsp_btn_ble.h"
+#include "button_handler.h"
 #include "calendar.h"
 #include "filesystem.h"
 #include "leds.h"
@@ -723,6 +724,7 @@ int main(void)
     power_management_init();
 
     leds_init();
+    button_handler_init();
     ble_stack_init();
     gatt_init();
 
