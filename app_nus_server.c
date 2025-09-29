@@ -56,6 +56,9 @@ static uint16_t                          m_emisor_conn_handle   = BLE_CONN_HANDL
 static uint8_t                           custom_mac_addr_[6]    = {0};
 static ble_gap_addr_t                    m_target_periph_addr;
 
+// External configuration structure
+extern config_repeater_t config_repeater;
+
 static ble_uuid_t                        m_adv_uuids[] = {
     {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};
 
@@ -119,9 +122,10 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                     size_t mac_length = p_evt->params.rx_data.length - 5;
                     if (mac_length == 12) // Verifica que la longitud sea válida
                     {
+                        // Parsear la MAC en orden secuencial: aabbccddeeff -> [aa][bb][cc][dd][ee][ff] en índices [0][1][2][3][4][5]
                         for (size_t i = 0; i < 6; i++)
                         {
-                            char byte_str[3]    = {message[5 + i * 2], message[6 + i * 2], '\0'};
+                            char byte_str[3] = {message[5 + i * 2], message[6 + i * 2], '\0'};
                             custom_mac_addr_[i] = (uint8_t)strtol(byte_str, NULL, 16);
                         }
                         NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 01 recibido: "
@@ -132,8 +136,22 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                                          custom_mac_addr_[2], custom_mac_addr_[3],
                                          custom_mac_addr_[4], custom_mac_addr_[5]);
 
-                        // Guarda la MAC en la memoria flash y reinicia el
-                        // dispositivo
+                        // Actualizar la estructura de configuración con la nueva MAC
+                        memcpy(config_repeater.mac_emisor, custom_mac_addr_, 6);
+                        NRF_LOG_RAW_INFO(LOG_OK " Estructura config_repeater actualizada con nueva MAC");
+
+                        // Guardar la configuración completa en flash (incluye la nueva MAC)
+                        ret_code_t save_result = save_config_to_flash(&config_repeater);
+                        if (save_result == NRF_SUCCESS)
+                        {
+                            NRF_LOG_RAW_INFO(LOG_OK " Configuración guardada correctamente en flash");
+                        }
+                        else
+                        {
+                            NRF_LOG_RAW_INFO(LOG_FAIL " Error al guardar configuración: 0x%X", save_result);
+                        }
+
+                        // También guardar la MAC individualmente para compatibilidad
                         save_mac_to_flash(MAC_EMISOR, custom_mac_addr_);
                     }
                     else
@@ -182,12 +200,30 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                             {
                                 NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 04 recibido: "
                                                  "Cambiar tiempo de encendido \x1b[0m");
+                                NRF_LOG_RAW_INFO(LOG_INFO " Nuevo tiempo: %u segundos", 
+                                                 time_in_seconds);
 
+                                // Actualizar la estructura de configuración con el nuevo tiempo
+                                config_repeater.tiempo_encendido = time_in_ms;
+                                NRF_LOG_RAW_INFO(LOG_OK " Estructura config_repeater actualizada");
+
+                                // Guardar la configuración completa en flash
+                                ret_code_t save_result = save_config_to_flash(&config_repeater);
+                                if (save_result == NRF_SUCCESS)
+                                {
+                                    NRF_LOG_RAW_INFO(LOG_OK " Configuracion guardada correctamente en flash");
+                                }
+                                else
+                                {
+                                    NRF_LOG_RAW_INFO(LOG_FAIL " Error al guardar configuracion: 0x%X", save_result);
+                                }
+
+                                // También guardar individualmente para compatibilidad
                                 write_time_to_flash(TIEMPO_ENCENDIDO, time_in_ms);
                             }
                             else
                             {
-                                NRF_LOG_RAW_INFO(LOG_WARN "\nEl tiempo de encendido excede el máximo "
+                                NRF_LOG_RAW_INFO(LOG_WARN "\nEl tiempo de encendido excede el maximo "
                                                           "permitido (9999 segundos).");
                             }
                         }
@@ -214,7 +250,7 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                     break;
                 }
 
-                case 6: // Comando 06: Guardar tiempo de apagado
+                case 6: // Comando 06: Guardar tiempo de dormido
                 {
                     if (p_evt->params.rx_data.length > 5) // Verifica que haya al menos "11106X"
                     {
@@ -235,9 +271,26 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                             {
                                 NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 06 recibido: "
                                                  "Cambiar tiempo de dormido \x1b[0m");
+                                NRF_LOG_RAW_INFO(LOG_INFO " Nuevo tiempo: %u segundos", 
+                                                 time_in_seconds);
 
+                                // Actualizar la estructura de configuración con el nuevo tiempo
+                                config_repeater.tiempo_dormido = time_in_ms;
+                                NRF_LOG_RAW_INFO(LOG_OK " Estructura config_repeater actualizada");
+
+                                // Guardar la configuración completa en flash
+                                ret_code_t save_result = save_config_to_flash(&config_repeater);
+                                if (save_result == NRF_SUCCESS)
+                                {
+                                    NRF_LOG_RAW_INFO(LOG_OK " Configuracion guardada correctamente en flash");
+                                }
+                                else
+                                {
+                                    NRF_LOG_RAW_INFO(LOG_FAIL " Error al guardar configuracion: 0x%X", save_result);
+                                }
+
+                                // También guardar individualmente para compatibilidad
                                 write_time_to_flash(TIEMPO_SLEEP, time_in_ms);
-
                             }
                             else
                             {
@@ -287,23 +340,37 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                                              dt.year, dt.month, dt.day, dt.hour, dt.minute,
                                              dt.second);
 
-                            // Llamar a la función modificada
-                            err_code = write_date_to_flash(&dt);
+                            // Actualizar la estructura de configuración con la nueva fecha
+                            config_repeater.fecha_configuracion = dt;
+                            NRF_LOG_RAW_INFO(LOG_OK " Estructura config_repeater actualizada");
 
+                            // Guardar la configuración completa en flash
+                            ret_code_t save_result = save_config_to_flash(&config_repeater);
+                            if (save_result == NRF_SUCCESS)
+                            {
+                                NRF_LOG_RAW_INFO(LOG_OK " Configuracion guardada correctamente en flash");
+                            }
+                            else
+                            {
+                                NRF_LOG_RAW_INFO(LOG_FAIL " Error al guardar configuracion: 0x%X", save_result);
+                            }
+                            nrf_delay_ms(50); // Delay tras escribir
+                            // También guardar individualmente para compatibilidad
+                            err_code = write_date_to_flash(&dt);
                             if (err_code != NRF_SUCCESS)
                             {
-                                NRF_LOG_RAW_INFO(LOG_FAIL " Error guardando: 0x%X", err_code);
+                                NRF_LOG_RAW_INFO(LOG_FAIL " Error guardando fecha individualmente: 0x%X", err_code);
                             }
                         }
                         else
                         {
-                            NRF_LOG_RAW_INFO(LOG_WARN " Formato inválido. Se esperaba "
+                            NRF_LOG_RAW_INFO(LOG_WARN " Formato invalido. Se esperaba "
                                                       "YYYYMMDDHHMMSS.");
                         }
                     }
                     else
                     {
-                        NRF_LOG_RAW_INFO(LOG_WARN " Datos insuficientes. Se esperaban 14 dígitos");
+                        NRF_LOG_RAW_INFO(LOG_WARN " Datos insuficientes. Se esperaban 14 digitos");
                     }
                     break;
                 }
@@ -343,7 +410,25 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                             {
                                 NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 10 recibido: "
                                                  "Cambiar tiempo de encendido extendido \x1b[0m");
+                                NRF_LOG_RAW_INFO(LOG_INFO " Nuevo tiempo: %u segundos", 
+                                                 time_in_seconds);
 
+                                // Actualizar la estructura de configuración con el nuevo tiempo
+                                config_repeater.tiempo_extendido = time_in_ms;
+                                NRF_LOG_RAW_INFO(LOG_OK " Estructura config_repeater actualizada");
+
+                                // Guardar la configuración completa en flash
+                                ret_code_t save_result = save_config_to_flash(&config_repeater);
+                                if (save_result == NRF_SUCCESS)
+                                {
+                                    NRF_LOG_RAW_INFO(LOG_OK " Configuracion guardada correctamente en flash");
+                                }
+                                else
+                                {
+                                    NRF_LOG_RAW_INFO(LOG_FAIL " Error al guardar configuracion: 0x%X", save_result);
+                                }
+
+                                // También guardar individualmente para compatibilidad
                                 write_time_to_flash(TIEMPO_EXTENDED_ENCENDIDO, time_in_ms);
                             }
                             else
@@ -396,16 +481,10 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                             {
                                 NRF_LOG_RAW_INFO("\n\n\x1b[1;36m--- Comando 12 recibido: "
                                                  "Cambiar tiempo de dormido extendido \x1b[0m");
-                                NRF_LOG_RAW_INFO(LOG_INFO " Configurando: %u segundos (%u ms)",
-                                                 time_in_seconds, time_in_ms);
+                                NRF_LOG_RAW_INFO(LOG_INFO " Configurando: %u segundos",
+                                                 time_in_seconds);
 
                                 write_time_to_flash(TIEMPO_EXTENDED_SLEEP, time_in_ms);
-
-                                // Confirmar que se guardó correctamente
-                                uint32_t tiempo_leido = read_time_from_flash(
-                                    TIEMPO_EXTENDED_SLEEP, DEFAULT_DEVICE_EXTENDED_SLEEP_TIME_MS);
-                                NRF_LOG_RAW_INFO(LOG_INFO " Tiempo de dormido extendido guardado: %u ms (%u segundos)",
-                                                 tiempo_leido, tiempo_leido / 1000);
                             }
                             else
                             {
@@ -415,7 +494,7 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                         }
                         else
                         {
-                            NRF_LOG_WARNING("Demasiados dígitos para el tiempo de dormido extendido.");
+                            NRF_LOG_WARNING("Demasiados digitos para el tiempo de dormido extendido.");
                         }
                     }
                     else
@@ -431,8 +510,8 @@ static void nus_data_handler(ble_nus_evt_t *p_evt)
                     uint32_t extended_sleep_time_ms = read_time_from_flash(
                         TIEMPO_EXTENDED_SLEEP, DEFAULT_DEVICE_EXTENDED_SLEEP_TIME_MS);
 
-                    NRF_LOG_RAW_INFO("\nTiempo de dormido extendido actual: %u ms (%u segundos)",
-                                     extended_sleep_time_ms, extended_sleep_time_ms / 1000);
+                    NRF_LOG_RAW_INFO(LOG_INFO " Tiempo de dormido extendido actual: %u segundos",
+                                     extended_sleep_time_ms / 1000);
 
                     break;
                 }

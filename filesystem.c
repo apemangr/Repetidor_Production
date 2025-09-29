@@ -371,7 +371,7 @@ uint32_t read_time_from_flash(valor_type_t valor_type, uint32_t default_valor)
                 // Copiar directamente el valor desde flash
                 data      = (uint32_t *)flash_record.p_data;
                 resultado = *data;
-                //NRF_LOG_RAW_INFO(LOG_INFO " Tiempo de %s cargado: %u segundos", label, resultado/1000);
+                // NRF_LOG_RAW_INFO(LOG_INFO " Tiempo de %s cargado: %u segundos", label, resultado/1000);
             }
             else
             {
@@ -525,9 +525,13 @@ ret_code_t write_date_to_flash(const datetime_t *p_date)
     if (err_code == NRF_SUCCESS)
     {
         err_code = fds_record_update(&record_desc, &record);
-        if (err_code != NRF_SUCCESS)
+        if (err_code == NRF_SUCCESS)
         {
-            NRF_LOG_RAW_INFO(LOG_FAIL " Error actualizando: 0x%X", err_code);
+            NRF_LOG_RAW_INFO(LOG_OK " Fecha y hora actualizada correctamente");
+        }
+        else
+        {
+            NRF_LOG_RAW_INFO(LOG_FAIL " Error actualizando fecha y hora: 0x%X", err_code);
         }
     }
     else if (err_code == FDS_ERR_NOT_FOUND)
@@ -535,7 +539,11 @@ ret_code_t write_date_to_flash(const datetime_t *p_date)
         err_code = fds_record_write(NULL, &record);
         if (err_code == NRF_SUCCESS)
         {
-            NRF_LOG_RAW_INFO(LOG_FAIL " Error escribiendo: 0x%X", err_code);
+            NRF_LOG_RAW_INFO(LOG_OK " Fecha y hora guardada correctamente");
+        }
+        else
+        {
+            NRF_LOG_RAW_INFO(LOG_FAIL " Error escribiendo fecha y hora: 0x%X", err_code);
         }
     }
     else
@@ -629,27 +637,27 @@ void load_mac_from_flash(mac_type_t mac_type, uint8_t *mac_out)
         if (mac_type == MAC_EMISOR)
         {
             // MAC predeterminada del emisor
-            mac_out[0] = 0x04;
-            mac_out[1] = 0x00;
+            mac_out[0] = 0xC3;
+            mac_out[1] = 0xAB;
             mac_out[2] = 0x00;
             mac_out[3] = 0x00;
-            mac_out[4] = 0xAB;
-            mac_out[5] = 0xC3;
+            mac_out[4] = 0x00;
+            mac_out[5] = 0x04;
         }
         else // MAC_REPETIDOR
         {
             // MAC predeterminada del repetidor
-            mac_out[0] = 0x6A;
-            mac_out[1] = 0x0C;
-            mac_out[2] = 0x04;
-            mac_out[3] = 0xB3;
-            mac_out[4] = 0x72;
-            mac_out[5] = 0xE4;
+            mac_out[0] = 0xE4;
+            mac_out[1] = 0x72;
+            mac_out[2] = 0xB3;
+            mac_out[3] = 0x04;
+            mac_out[4] = 0x0C;
+            mac_out[5] = 0x6A;
         }
 
         NRF_LOG_RAW_INFO(LOG_INFO " %s cargada (predeterminada): ", mac_label);
         NRF_LOG_RAW_INFO(
-            "%02X:%02X:%02X:%02X:%02X:%02X", mac_out[5], mac_out[4], mac_out[3], mac_out[2], mac_out[1], mac_out[0]);
+            "%02X:%02X:%02X:%02X:%02X:%02X", mac_out[0], mac_out[1], mac_out[2], mac_out[3], mac_out[4], mac_out[5]);
     }
 }
 
@@ -1142,16 +1150,16 @@ ret_code_t save_config_to_flash(config_repeater_t *p_config)
         ret = fds_record_write(&record_desc, &record);
         if (ret == NRF_SUCCESS)
         {
-            NRF_LOG_RAW_INFO("\n> Configuracion guardada en memoria flash");
+            NRF_LOG_RAW_INFO(LOG_OK " Configuracion guardada en memoria flash");
         }
         else
         {
-            NRF_LOG_ERROR("Error al guardar configuracion: 0x%X", ret);
+            NRF_LOG_RAW_INFO(LOG_OK " Error al guardar configuracion: 0x%X", ret);
         }
     }
     else
     {
-        NRF_LOG_ERROR("Error al buscar configuracion: 0x%X", ret);
+        NRF_LOG_RAW_INFO(LOG_FAIL " Error al buscar configuracion: 0x%X", ret);
     }
 
     return ret;
@@ -1188,41 +1196,24 @@ ret_code_t load_config_from_flash(config_repeater_t *p_config)
                 // Cerrar el registro
                 fds_record_close(&record_desc);
 
-                // NRF_LOG_RAW_INFO("\n\t>> Configuracion cargada desde memoria flash");
-                // NRF_LOG_RAW_INFO("\n\t   - MAC Emisor: %02X:%02X:%02X:%02X:%02X:%02X",
-                //                  p_config->mac_emisor[5], p_config->mac_emisor[4], p_config->mac_emisor[3],
-                //                  p_config->mac_emisor[2], p_config->mac_emisor[1], p_config->mac_emisor[0]);
-                // NRF_LOG_RAW_INFO("\n\t   - MAC Repetidor: %02X:%02X:%02X:%02X:%02X:%02X",
-                //                  p_config->mac_repetidor[5], p_config->mac_repetidor[4], p_config->mac_repetidor[3],
-                //                  p_config->mac_repetidor[2], p_config->mac_repetidor[1], p_config->mac_repetidor[0]);
-                // NRF_LOG_RAW_INFO("\n\t   - Tiempo encendido: %u ms", p_config->tiempo_encendido);
-                // NRF_LOG_RAW_INFO("\n\t   - Tiempo dormido: %u ms", p_config->tiempo_dormido);
-                // NRF_LOG_RAW_INFO("\n\t   - Tiempo extendido: %u ms", p_config->tiempo_extendido);
-                // NRF_LOG_RAW_INFO("\n\t   - Version: v%u.%u.%u",
-                //                  p_config->version[0], p_config->version[1], p_config->version[2]);
-                // NRF_LOG_RAW_INFO("\n\t   - Fecha Config: %02u/%02u/%u %02u:%02u:%02u",
-                //                  p_config->fecha_configuracion.day, p_config->fecha_configuracion.month,
-                //                  p_config->fecha_configuracion.year, p_config->fecha_configuracion.hour,
-                //                  p_config->fecha_configuracion.minute, p_config->fecha_configuracion.second);
-
                 // Validar si la fecha es valida (diferente de cero)
                 if (p_config->fecha_configuracion.year == 0 || p_config->fecha_configuracion.month == 0 || p_config->fecha_configuracion.day == 0)
                 {
-                    NRF_LOG_RAW_INFO("\n\t   [WARN] Fecha de configuracion no valida - configuracion antigua");
+                    NRF_LOG_RAW_INFO(LOG_FAIL " Fecha de configuracion no valida - configuracion antigua");
                 }
 
                 return NRF_SUCCESS;
             }
             else
             {
-                NRF_LOG_RAW_INFO("\n\t>> Tamano de configuracion en flash no coincide");
+                NRF_LOG_RAW_INFO(LOG_FAIL " Tamano de configuracion en flash no coincide");
                 fds_record_close(&record_desc);
                 return NRF_ERROR_INVALID_DATA;
             }
         }
         else
         {
-            NRF_LOG_RAW_INFO("\n\t>> Error al abrir configuracion: 0x%X", ret);
+            NRF_LOG_RAW_INFO(LOG_FAIL " Error al abrir configuracion: 0x%X", ret);
         }
     }
     else if (ret == FDS_ERR_NOT_FOUND)
@@ -1246,7 +1237,7 @@ void init_sistema_configuracion(config_repeater_t *p_config)
     // Validar parametro de entrada
     if (p_config == NULL)
     {
-        NRF_LOG_ERROR("Error: puntero de configuracion nulo");
+        NRF_LOG_RAW_INFO(LOG_FAIL " Puntero de configuracion nulo");
         return;
     }
 
